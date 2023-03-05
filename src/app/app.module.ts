@@ -6,12 +6,14 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from 'src/material.module';
 import { BasicSceneComponent } from './basic-scene/basic-scene.component';
+import { ThreeRenderComponent } from './three-render/three-render.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    BasicSceneComponent
+    BasicSceneComponent,
+    ThreeRenderComponent
   ],
   imports: [
     BrowserModule,

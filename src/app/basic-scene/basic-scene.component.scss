@@ -1,4 +1,16 @@
 .container{
+    border: 2px;
+    border-color: teal;
+    border-style: double;
     display: flex;
     flex-direction: column;
+}
+
+.trheeScene{
+    border: 1px;
+    border-color: red;
+    border-style: dashed;
+    flex-grow: 6;
+    height: 300 px;
+
 }
