@@ -1,8 +1,12 @@
-<div class="container" style="border: 1px; border-color: antiquewhite; border-style: dashed;">
+<div class="container" >
     <div class="options">
         <button mat-button color="primary" (click)="test1()">Primary</button>
     </div>
-    <div class="trheeScene" style="border: 1px; border-color: red; border-style: dotted;" >
-        <canvas id="c" ></canvas>
+    <div class="trheeScene" >
+        <!-- <canvas id="c" ></canvas> -->
+        <app-three-render></app-three-render>
+    </div>
+    <div>
+        <button mat-button color="primary" (click)="test1()">test1</button>
     </div>
 </div>
