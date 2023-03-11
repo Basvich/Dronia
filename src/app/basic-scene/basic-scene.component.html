@@ -1,12 +1,63 @@
-<div class="container" >
-    <div class="options">
-        <button mat-button color="primary" (click)="test1()">Primary</button>
+<div class="container">
+  <div class="options">
+    <button mat-button color="primary" (click)="test1()">Primary</button>
+  </div>
+  <div class="trheeScene">
+    <!-- <canvas id="c" ></canvas> -->
+    <app-three-render></app-three-render>
+  </div>
+  <div class="controlsGroup">
+    <button mat-button color="primary" (click)="test2()">test2</button>
+    <div class="verticalGroup">
+      <mat-slider style=" width: 100px;">
+        <input matSliderThumb>
+      </mat-slider>
+      <mat-slider style=" width: 100px;">
+        <input matSliderThumb>
+      </mat-slider>
+      <mat-slider style=" width: 100px;">
+        <input matSliderThumb>
+      </mat-slider>
     </div>
-    <div class="trheeScene" >
-        <!-- <canvas id="c" ></canvas> -->
-        <app-three-render></app-three-render>
-    </div>
-    <div>
-        <button mat-button color="primary" (click)="test1()">test1</button>
-    </div>
+    <mat-card>
+      <mat-card-header class="C1">
+        Rotacion
+      </mat-card-header>
+      <mat-card-content class="verticalGroup">
+        <div><span>X</span>
+          <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
+            <input matSliderThumb [(value)]="RotX">
+          </mat-slider>
+        </div>
+        <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
+          <input matSliderThumb [(value)]="RotY">
+        </mat-slider>
+        <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
+          <input matSliderThumb [(value)]="RotZ">
+        </mat-slider>
+      </mat-card-content>
+    </mat-card>
+    <mat-card>
+      <mat-card-header class="C1">
+        Control
+      </mat-card-header>
+      <mat-card-content class="verticalGroup">
+        <div><span>Power</span>
+          <mat-slider style=" width: 100px;" min="0" max="20" step="1" discrete>
+            <input matSliderThumb [(value)]="TotalForce">
+          </mat-slider>
+        </div>
+        <div><span>Pitch</span>
+          <mat-slider style=" width: 100px;" min="-1" max="1" step="0.1" discrete>
+          <input matSliderThumb [(value)]="PitchBalance">
+        </mat-slider>
+      </div>
+        <div><span>Roll</span>
+          <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete disabled="true">
+            <input matSliderThumb [(value)]="RotZ">
+          </mat-slider>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

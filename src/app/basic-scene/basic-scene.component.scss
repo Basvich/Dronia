@@ -14,3 +14,14 @@
     height: 300 px;
 
 }
+
+.controlsGroup{
+    display: flex;
+    flex-direction: row;
+}
+
+.verticalGroup{
+    display: flex;
+    flex-direction: column;
+}
+

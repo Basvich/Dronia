@@ -16,12 +16,14 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
   private camControl?: OrbitControls;
   private sunLight?: THREE.DirectionalLight;
   private terrainMesh?: THREE.Mesh;
-  private earthMesh?: THREE.Object3D;
+  //private earthMesh?: THREE.Object3D;
 
   private get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
   }
   @ViewChild('canvas') private canvasRef!: ElementRef;
+
+  public CalbackRenderLoop?:(ms:number)=>void;
 
   public get Scene(): THREE.Scene | undefined {
     return this.scene;
@@ -41,7 +43,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     requestAnimationFrame(this.render.bind(this));
   }
 
-  private render(time: number) {
+  private render(msTime: number) {
     if (!this.renderer) return;
     if (!this.camera) return;
     if (this.resizeRendererToDisplaySize(this.renderer)) {
@@ -51,6 +53,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     }
     this.camControl?.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
     if (!this.scene) return;
+    if(this.CalbackRenderLoop) this.CalbackRenderLoop(msTime);
     this.renderer.render(this.scene, this.camera);
     requestAnimationFrame(this.render.bind(this));
   }
@@ -113,17 +116,17 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     const light = new THREE.AmbientLight(0xFFFFFF, 0.2);
     this.scene.add(light);
 
-    const radius = 1;
-    const widthSegments = 6;
-    const heightSegments = 6;
-    const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
-    const earthMaterial = new THREE.MeshStandardMaterial({ color: 0x10ff00 });
-    this.earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
+    //const radius = 1;
+    //const widthSegments = 6;
+    //const heightSegments = 6;
+    //const sphereGeometry = new THREE.SphereGeometry(radius, widthSegments, heightSegments);
+    //const earthMaterial = new THREE.MeshStandardMaterial({ color: 0x10ff00 });
+    /* this.earthMesh = new THREE.Mesh(sphereGeometry, earthMaterial);
     this.earthMesh.receiveShadow = true;
     this.earthMesh.castShadow = true;
     this.earthMesh.position.set(0, 1.2, 0);
     this.scene.add(this.earthMesh);
-
+ */
     //this.createFloor3D();
     this.createPlaneGeo();
     //this.createBox();
