@@ -23,7 +23,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
   }
   @ViewChild('canvas') private canvasRef!: ElementRef;
 
-  public CalbackRenderLoop?:(ms:number)=>void;
+  public CalbackRenderLoop?:(msElapsed:number)=>void;
 
   public get Scene(): THREE.Scene | undefined {
     return this.scene;

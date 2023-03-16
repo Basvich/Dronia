@@ -1,13 +1,13 @@
 <div class="container">
   <div class="options">
-    <button mat-button color="primary" (click)="test1()">Primary</button>
+    <button mat-button color="primary" (click)="test1()">Create drone</button>
   </div>
   <div class="trheeScene">
     <!-- <canvas id="c" ></canvas> -->
     <app-three-render></app-three-render>
   </div>
   <div class="controlsGroup">
-    <button mat-button color="primary" (click)="test2()">test2</button>
+    <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
     <div class="verticalGroup">
       <mat-slider style=" width: 100px;">
         <input matSliderThumb>
@@ -19,7 +19,7 @@
         <input matSliderThumb>
       </mat-slider>
     </div>
-    <mat-card>
+    <!-- <mat-card>
       <mat-card-header class="C1">
         Rotacion
       </mat-card-header>
@@ -36,14 +36,14 @@
           <input matSliderThumb [(value)]="RotZ">
         </mat-slider>
       </mat-card-content>
-    </mat-card>
+    </mat-card> -->
     <mat-card>
       <mat-card-header class="C1">
         Control
       </mat-card-header>
       <mat-card-content class="verticalGroup">
         <div><span>Power</span>
-          <mat-slider style=" width: 100px;" min="0" max="20" step="1" discrete>
+          <mat-slider style=" width: 100px;" min="0" max="20" step="0.05" discrete>
             <input matSliderThumb [(value)]="TotalForce">
           </mat-slider>
         </div>
@@ -54,7 +54,7 @@
       </div>
         <div><span>Roll</span>
           <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete disabled="true">
-            <input matSliderThumb [(value)]="RotZ">
+            <input matSliderThumb >
           </mat-slider>
         </div>
       </mat-card-content>

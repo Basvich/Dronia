@@ -11,6 +11,7 @@ import { ThreeRenderComponent } from '../three-render/three-render.component';
   styleUrls: ['./basic-scene.component.scss']
 })
 export class BasicSceneComponent {
+  private lastTimestap=0;
   drone?: TDrone3D;
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
@@ -61,13 +62,22 @@ export class BasicSceneComponent {
     console.log(`v1:${BasicSceneComponent.V3ToString(v1)}  v2:${BasicSceneComponent.V3ToString(v2)}`)
   }
 
+  public resetDrone(){
+    this.drone?.Reset();
+  }
+
   public static V3ToString(v:THREE.Vector3)   {
     return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)},]`;
   }
 
   private beforeRenderFrame(ms:number){
-    const sg=ms*0.001;
-    if(!this.drone) return;
+    
+    if(this.lastTimestap==0) this.lastTimestap=ms-16;
+    let dif=ms-this.lastTimestap;
+    this.lastTimestap=ms;
+    if(dif>100) dif=100;  // Bolqueo para poder depurar
+    const sg=dif*0.001;
+    if(!this.drone) return;    
     this.drone.Simulate(sg);
   }
 }
