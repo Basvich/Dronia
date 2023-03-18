@@ -70,13 +70,11 @@ export class BasicSceneComponent {
     return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)},]`;
   }
 
-  private beforeRenderFrame(ms:number){
-    
-    if(this.lastTimestap==0) this.lastTimestap=ms-16;
-    let dif=ms-this.lastTimestap;
-    this.lastTimestap=ms;
-    if(dif>100) dif=100;  // Bolqueo para poder depurar
-    const sg=dif*0.001;
+  private beforeRenderFrame(sg:number){    
+    if(this.lastTimestap==0) this.lastTimestap=sg-0.04;
+    let dif=sg-this.lastTimestap;
+    this.lastTimestap=sg;
+    if(dif>0.1) dif=0.1;  // Bolqueo para poder depurar    
     if(!this.drone) return;    
     this.drone.Simulate(sg);
   }

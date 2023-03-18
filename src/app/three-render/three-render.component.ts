@@ -3,19 +3,22 @@ import * as THREE from "three";
 import { BufferAttribute } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
+const framePeriod=0.04;
+
 @Component({
   selector: 'app-three-render',
   templateUrl: './three-render.component.html',
   styleUrls: ['./three-render.component.scss']
 })
 export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
-
+  private deltaT=0;
   private scene?: THREE.Scene;
   private renderer!: THREE.WebGLRenderer;
   private camera?: THREE.PerspectiveCamera;
   private camControl?: OrbitControls;
   private sunLight?: THREE.DirectionalLight;
   private terrainMesh?: THREE.Mesh;
+  private clock = new THREE.Clock();
   //private earthMesh?: THREE.Object3D;
 
   private get canvas(): HTMLCanvasElement {
@@ -23,7 +26,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
   }
   @ViewChild('canvas') private canvasRef!: ElementRef;
 
-  public CalbackRenderLoop?:(msElapsed:number)=>void;
+  public CalbackRenderLoop?:(SgElapsed:number)=>void;
 
   public get Scene(): THREE.Scene | undefined {
     return this.scene;
@@ -40,7 +43,29 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
 
   public startWebGl(): void {
     // Solicita al navegador que programe el repintado de la ventana
-    requestAnimationFrame(this.render.bind(this));
+    //requestAnimationFrame(this.render.bind(this));
+    requestAnimationFrame(()=>this.update());
+  }
+
+  private update(){
+    if (!this.scene) return;
+    requestAnimationFrame(()=>this.update());
+    if (!this.renderer) return;
+    if (!this.camera) return;
+    this.deltaT+=this.clock.getDelta();
+    if(this.deltaT>framePeriod){
+      this.camControl?.update();
+      if(this.CalbackRenderLoop) this.CalbackRenderLoop(this.deltaT);
+      this.renderer.render(this.scene, this.camera);
+      this.deltaT=this.deltaT-framePeriod;
+      if(this.deltaT>framePeriod) this.deltaT=framePeriod;
+      if (this.resizeRendererToDisplaySize(this.renderer)) {
+        const canvas = this.renderer.domElement;
+        this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        this.camera.updateProjectionMatrix();
+      }
+    }
+
   }
 
   private render(msTime: number) {
@@ -55,7 +80,8 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     if (!this.scene) return;
     if(this.CalbackRenderLoop) this.CalbackRenderLoop(msTime);
     this.renderer.render(this.scene, this.camera);
-    requestAnimationFrame(this.render.bind(this));
+    //requestAnimationFrame(this.render.bind(this));
+    requestAnimationFrame((msTime)=>this.render(msTime));
   }
 
   private resizeRendererToDisplaySize(renderer: THREE.WebGLRenderer): boolean {

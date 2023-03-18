@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { TSpatialVector } from "./calcObjects";
 
-const g=9.81; 
+const g=3; 
 const cx=1.25; //Simple simplificacion de la resistencia aerodinamica devido a la velocidad
 /** Simplificacion muy grande de la resistencia a la rotacion */
 const cRot=4;
@@ -251,7 +251,7 @@ export class TDrone3D{
     //Se rota lo mismo que el modulo
     this.resultAccel.applyEuler(this.droneMesh.rotation);
     this.resultAccel.add(this.mG);
-    this.resultAccel.divideScalar(masa);
+    this.resultAccel.divideScalar(masa); 
     if(this.simStep % 128==0){      
       console.log(`calcRotorForces() resultAc:${TDrone3D.ToString(this.resultAccel)}`);
     }  
