@@ -2,23 +2,12 @@
   <div class="options">
     <button mat-button color="primary" (click)="test1()">Create drone</button>
   </div>
-  <div class="trheeScene">
-    <!-- <canvas id="c" ></canvas> -->
+  <div class="trheeScene">    
     <app-three-render></app-three-render>
   </div>
   <div class="controlsGroup">
     <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
-    <div class="verticalGroup">
-      <mat-slider style=" width: 100px;">
-        <input matSliderThumb>
-      </mat-slider>
-      <mat-slider style=" width: 100px;">
-        <input matSliderThumb>
-      </mat-slider>
-      <mat-slider style=" width: 100px;">
-        <input matSliderThumb>
-      </mat-slider>
-    </div>
+    
     <!-- <mat-card>
       <mat-card-header class="C1">
         Rotacion
@@ -57,6 +46,14 @@
             <input matSliderThumb >
           </mat-slider>
         </div>
+      </mat-card-content>
+    </mat-card>
+    <mat-card>
+      <mat-card-header class="C1">
+        Tests
+      </mat-card-header>
+      <mat-card-content>
+        <button mat-button color="secondary" (click)="testCicle()">Test adapters</button>
       </mat-card-content>
     </mat-card>
   </div>

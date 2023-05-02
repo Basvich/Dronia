@@ -1,8 +1,11 @@
 import { Component, ViewChild } from '@angular/core';
 import * as THREE from 'three';
-import { Vector2 } from 'three';
+import AdapterDroneTf from '../NetsIA/AdapterDroneTf';
+import { Model1D } from '../NetsIA/ModelIA1D';
+import { TReward } from '../NetsIA/TRewards';
 import { TDrone3D } from '../Objects/Drone3D';
 import { ThreeRenderComponent } from '../three-render/three-render.component';
+import { TDroneMesh } from '../Objects/TDroneMesh';
 
 
 @Component({
@@ -13,6 +16,7 @@ import { ThreeRenderComponent } from '../three-render/three-render.component';
 export class BasicSceneComponent {
   private lastTimestap=0;
   drone?: TDrone3D;
+  droneMesh?: TDroneMesh;
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
@@ -32,23 +36,23 @@ export class BasicSceneComponent {
     this.drone.RotationZ=v;
   }
 
-  public get TotalForce():number{return this.drone?.TotalForce??0}
-  public set TotalForce(v:number){if(this.drone) this.drone.TotalForce=v}
-  public get PitchBalance():number{return this.drone?.PithBalance??0}
-  public set PitchBalance(v:number){if(this.drone) this.drone.PithBalance=v}
+  public get TotalForce():number{return this.drone?.TotalForce??0;}
+  public set TotalForce(v:number){if(this.drone) this.drone.TotalForce=v;}
+  public get PitchBalance():number{return this.drone?.PithBalance??0;}
+  public set PitchBalance(v:number){if(this.drone) this.drone.PithBalance=v;}
 
   public test1() {
     console.log('test1');
     if(this.drone) return;
-    const drone = new TDrone3D(2, 4, 0);
-
+    const drone = new TDrone3D(2, 4, 0);   
 
     this.drone=drone;
+    this.droneMesh=new TDroneMesh(drone);
     const scene=this.render.Scene;
     if(!scene) return;
-    const mesh=drone.Mesh;
+    const mesh=this.droneMesh.Mesh;
     scene.add(mesh);
-    scene.add(drone.Arrow);
+    //scene.add(drone.Arrow);
     this.render.CalbackRenderLoop=(ms:number)=>this.beforeRenderFrame(ms);
   }
 
@@ -59,7 +63,7 @@ export class BasicSceneComponent {
     
     v1b.copy(v1);
     const v2=v1b.applyEuler(euler);
-    console.log(`v1:${BasicSceneComponent.V3ToString(v1)}  v2:${BasicSceneComponent.V3ToString(v2)}`)
+    console.log(`v1:${BasicSceneComponent.V3ToString(v1)}  v2:${BasicSceneComponent.V3ToString(v2)}`);
   }
 
   public resetDrone(){
@@ -71,11 +75,35 @@ export class BasicSceneComponent {
   }
 
   private beforeRenderFrame(sg:number){    
-    if(this.lastTimestap==0) this.lastTimestap=sg-0.04;
+    if(this.lastTimestap===0) this.lastTimestap=sg-0.04;
     let dif=sg-this.lastTimestap;
     this.lastTimestap=sg;
     if(dif>0.1) dif=0.1;  // Bolqueo para poder depurar    
     if(!this.drone) return;    
     this.drone.Simulate(sg);
+    this.droneMesh?.updateFromDrone();
   }
+
+  public testCicle(){
+    if(!this.drone) return;
+    const m=new Model1D();
+    const jury=new TReward();
+    m.createModel2();
+    const adapter=new AdapterDroneTf(this.drone);
+    const droneState=adapter.getStateTensor();
+    const r=m.predict(droneState);
+    console.log(r);
+    adapter.setControlData(r);
+    const reward=jury.InstanReward(this.drone);
+    console.log(reward);
+  }
+
+  /** 
+   * 
+   * @param sg Segundos que pasaron con el anterior paso
+   */
+  private cicleControl(sg:number){
+    //
+
+  }  
 }

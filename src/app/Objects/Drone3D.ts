@@ -1,16 +1,27 @@
 import * as THREE from "three";
 import { TSpatialVector } from "./calcObjects";
 
+
+
+interface IDroneDimes{
+  /** Separacion lateral sobre eje z de la helice con el centro (en m) */
+  helSepWith:number;
+  /** Separacion longitudinal sobre eje X con el centro gravedad))*/
+  helSepLong:number;
+  /** Dimensiones del cuerpo [x,y,z] */
+  body:[number, number, number]
+}
+
 const g=3; 
 const cx=1.25; //Simple simplificacion de la resistencia aerodinamica devido a la velocidad
 /** Simplificacion muy grande de la resistencia a la rotacion */
 const cRot=4;
 const maxVelRotorForce=28; //En ms/s (~100Km/h) la velocidad en direccion del rotor a partir de la cual ya no genera ninguna fuerza
 
-/** Separacion lateral sobre eje z de la helice con el centro (en m) */
+
 const helSepWith=0.5; 
-/** Separacion longitudinal sobre eje X con el centro gravedad))*/
 const helSepLong=0.6;
+
 const masa=1;  //en Kg 
 const pesoFuerza=masa*g;  //En N la fuerza
 /** Velocidad maxima angular en torno a x en la que el rotor ya no genera torque adiciona (el 0.1 es totalmente arbitrario para simplificar otros efectos)*/
@@ -23,19 +34,20 @@ const maxTotalForce=2*pesoFuerza;
 const maxRotorForce=pesoFuerza*0.25;
 /** Medidas del cuerpo del drone */
 const ladoX=0.8, ladoY=0.2, ladoZ=0.4;
-const bodyGeometry = new THREE.BoxGeometry(ladoX,ladoY, ladoZ);
-const lpanelMaterial=new THREE.MeshLambertMaterial({color: 0x2233FF});  
+
+  
 
  /**
   * Simula fisicamente un Dron y las fuerzas aplicadas sobre el.
   * En los cálculos, se evita en lo posible creacion de nuevas clases, con lo que se usan ya vectores creados en vez de recrearlos con cada calculo
+  * No sabe nada de renderizado
   */
 export class TDrone3D{
   private simStep=0;
   private lastRot=0;
   private lapseAcum=0;
-  private arrow! : THREE.ArrowHelper;
-  private droneMesh!:THREE.Mesh;
+  //private arrow! : THREE.ArrowHelper;
+  //private droneMesh!:THREE.Mesh;
   private propelers:TSpatialVector[]=[];
   /** Vector fijo debido a la gravedad */
   private mG=new THREE.Vector3(0,-pesoFuerza,0);
@@ -79,33 +91,34 @@ export class TDrone3D{
   private frontForce=1;
   private backForce=1;
 
-  public get RotationX(): number {return this.droneMesh.rotation.x}
-  public set RotationX(v: number) {
-    this.droneMesh.rotation.x=v;
-    this.rotateArrow();
-  }
-  public get RotationY(): number {return this.droneMesh.rotation.y}
-  public set RotationY(v: number) {
-    this.droneMesh.rotation.y=v;
-    this.rotateArrow();
-  }
-  public get RotationZ(): number {return this.droneMesh.rotation.z}
-  public set RotationZ(v: number) {
-    this.droneMesh.rotation.z=v;
-    this.rotateArrow();
-  }
+  public Dimentions:IDroneDimes={helSepWith, helSepLong, body:[ladoX, ladoY, ladoZ]};
 
-  public get TotalForce():number{return this.totalForce}
-  public set TotalForce(v: number){this.totalForce=THREE.MathUtils.clamp(v,0,maxTotalForce)}
-  public get PithBalance():number{return this.pithBalance}
-  public set PithBalance(v: number){this.pithBalance=THREE.MathUtils.clamp(v,-1,1)}
+  public readonly FuerzaNeutra=pesoFuerza;
 
-  public get Mesh():THREE.Mesh {return this.droneMesh;}
-  public get Arrow(){return this.arrow;}
+  //public get Position(){return this.droneMesh.position;}
+  public Position=new THREE.Vector3(0,0,0);
+  public Rotation=new THREE.Euler(0,0,0);
 
-  public constructor(public x: number, public y: number, public z:number=0){
-    this.createMesh();
-    this.momentoInercia=this.calcMomentoInercia(ladoX,ladoY,ladoZ,masa);
+  public get Velocity(){return this.velocity;}
+
+  public get RotationX(): number {return this.Rotation.x;}
+  public set RotationX(v: number) {this.Rotation.x=v; }
+  public get RotationY(): number {return this.Rotation.y;}
+  public set RotationY(v: number) { this.Rotation.y=v; }
+  public get RotationZ(): number {return this.Rotation.z;}
+  public set RotationZ(v: number) { this.Rotation.z=v;}
+
+  public get TotalForce():number{return this.totalForce;}
+  public set TotalForce(v: number){this.totalForce=THREE.MathUtils.clamp(v,0,maxTotalForce);}
+  public get PithBalance():number{return this.pithBalance;}
+  public set PithBalance(v: number){this.pithBalance=THREE.MathUtils.clamp(v,-1,1);}
+
+  //
+  //public 
+
+  public constructor(public x: number, public y: number, public z:number=0){    
+    this.Position.set(x,y,z);
+    this.momentoInercia=this.calcMomentoInercia(this.Dimentions.body[0], this.Dimentions.body[1], this.Dimentions.body[2], masa);
     this.initializeInitialForce();
   }
 
@@ -115,7 +128,7 @@ export class TDrone3D{
    */
   public Simulate(elapsedSg:number){
     this.lapseAcum+=elapsedSg;
-    if(this.simStep % 128==0){
+    if(this.simStep % 128===0){
       const vr=(this.orientationEuler.z-this.lastRot)/this.lapseAcum;
       console.log(`-- Rot medida: ${vr.toFixed(2)} rad/s --`);
       this.lapseAcum=0;
@@ -131,77 +144,11 @@ export class TDrone3D{
     this.orientationEuler.set(0,0,0);
     this.wBody.set(0,0,0);
     this.velocity.set(0,0,0);
-    this.droneMesh.position.set(0,4,0);
+    this.Position.set(0,4,0);
     this.pithBalance=0;
     this.totalForce=pesoFuerza;
   }
-
-  public Delete(scene: THREE.Scene):void{
-    while (this.droneMesh.children.length){
-      this.droneMesh.remove(this.droneMesh.children[0]);
-    }
-    scene.remove(this.droneMesh);
-  }
-
-  private createMesh(){
-    //El cuerpo, una simple caja    
-    const droneMesh=new THREE.Mesh();
-    droneMesh.castShadow=true;
-    droneMesh.position.x = this.x;
-    droneMesh.position.y = this.y;
-    droneMesh.position.z=this.z;
-    const body=this.createBody();
-    droneMesh.add(body);
-    const helixGeom=new THREE.CylinderGeometry( 0.3, 0.4, 0.1);
-    const helixMaterial = new THREE.MeshBasicMaterial( {color: 0x800000} );
-    const helixMaterial2 = new THREE.MeshBasicMaterial( {color: 0x008000} );
-    const flHelix=new THREE.Mesh(helixGeom,helixMaterial2);  //Front left
-    flHelix.position.x=helSepLong;
-    flHelix.position.z=-helSepWith;
-    flHelix.castShadow=true;
-    droneMesh.add(flHelix);
-    const frHelix=new THREE.Mesh(helixGeom,helixMaterial);  //Front Right
-    frHelix.position.x=helSepLong;
-    frHelix.position.z=helSepWith;
-    frHelix.castShadow=true;
-    droneMesh.add(frHelix);
-    const blHelix=new THREE.Mesh(helixGeom,helixMaterial);  //Front Right
-    blHelix.position.x=-helSepLong;
-    blHelix.position.z=-helSepWith;
-    blHelix.castShadow=true;
-    droneMesh.add(blHelix);
-    const brHelix=new THREE.Mesh(helixGeom,helixMaterial);  //Front Right
-    brHelix.position.x=-helSepLong;
-    brHelix.position.z=helSepWith;
-    brHelix.castShadow=true;
-    droneMesh.add(brHelix);
-    //droneMesh.castShadow=true;
-    //droneMesh.receiveShadow = true;
-    droneMesh.rotation.order="XYZ"    
-    this.droneMesh=droneMesh;
-    this.arrow = new THREE.ArrowHelper(
-      // first argument is the direction
-      new THREE.Vector3(0, 1, 0).normalize(),
-      // second argument is the orgin
-      new THREE.Vector3(0, 0, 0),
-      // length
-      2,
-      // color
-      0x10ff00, 0.4, 0.3);
-      
-
-  }
-
-  private createBody():THREE.Mesh{
-    const body=new THREE.Mesh(bodyGeometry, lpanelMaterial);
-   /*  for (let i = 0; i < bodyGeometry.faces.length; i += 2) {
-      var faceColor = Math.random() * 0xffffff;
-      geometry.faces[i].color.setHex(faceColor);
-      geometry.faces[i + 1].color.setHex(faceColor);
-    } */
-    body.castShadow=true;
-    return body;
-  }
+ 
 
   private initializeInitialForce(){
     const peso=g*masa;
@@ -215,7 +162,7 @@ export class TDrone3D{
     this.propelers.push(new TSpatialVector( pos, initialForce)); //Front right
     this.propelersForce.push(this.frontForce/2);
     pos.setX(-helSepLong); pos.setZ(-helSepWith);
-    initialForce.setY(this.backForce/2)
+    initialForce.setY(this.backForce/2);
     this.propelers.push(new TSpatialVector( pos, initialForce)); //Back left
     this.propelersForce.push(this.backForce/2);
     pos.setZ(helSepWith);
@@ -249,17 +196,16 @@ export class TDrone3D{
     this.resultAccel.copy(this.rotorDir);
     this.resultAccel.multiplyScalar(modulo);
     //Se rota lo mismo que el modulo
-    this.resultAccel.applyEuler(this.droneMesh.rotation);
+    this.resultAccel.applyEuler(this.Rotation);
     this.resultAccel.add(this.mG);
     this.resultAccel.divideScalar(masa); 
-    if(this.simStep % 128==0){      
+    if(this.simStep % 128===0){      
       console.log(`calcRotorForces() resultAc:${TDrone3D.ToString(this.resultAccel)}`);
-    }  
-
+    }
   }
+
   /** Calculo del torque */
-  private calcMomentForce(){
- 
+  private calcMomentForce(){ 
     if(this.pithBalance>=0.3){
       //console.log('eoo');
     }
@@ -273,17 +219,17 @@ export class TDrone3D{
     } else tx=0;
     absW=Math.abs(this.wBody.z);
     if(absW<maxAngZVelRotorForce){
-      const factor=(1-absW/maxAngZVelRotorForce)
+      const factor=(1-absW/maxAngZVelRotorForce);
       tz=factor*tz;  //Se disminuye en proporcion la fuerza
-      if(this.simStep % 128==0){
+      if(this.simStep % 128===0){
         console.log(`calcMomentForce() maxAngZVelRotorForce: ${maxAngZVelRotorForce.toFixed(2)} absW:${absW.toFixed(2)}  factor:${factor.toFixed(2)}`);
       }
-    } else tz=0
+    } else tz=0;
     //Se aplica la fuerza para obtener la aceleracion
     const ax=tx/this.momentoInercia.x;
     const az=tz/this.momentoInercia.z;  //En rad/s
     this.resultTorque.set(ax,0,az);
-    if(this.simStep % 128==0){
+    if(this.simStep % 128===0){
       console.log(`calcMomentForce() tz:${tz.toFixed(2)}  az:${az.toFixed(2)} wz:${this.wBody.z.toFixed(2)}`);
     }
   }
@@ -313,22 +259,21 @@ export class TDrone3D{
 
     this.velocity.addScaledVector(this.linealResistence,segs);    
     //this.wBody.addScaledVector(this.rotationalResistence, segs);
-    if(this.simStep % 128==0){
+    if(this.simStep % 128===0){
       const vdifRot=this.rotationalResistence.z*segs;
       console.log(`calcMovment() wBody.z:${this.wBody.z.toFixed(2)} rad/s  rot resistence: ${this.rotationalResistence.z.toFixed(2)} Wdif=${vdifRot.toFixed(2)}  segs:${segs}}`);
       console.log(`calcMovment() resultAc:${TDrone3D.ToString(this.resultAccel)} linealResistence.y:${this.linealResistence.y.toFixed(2)}`);
-
     }  
 
     //Finalmente se actualiza la posición y el angulo de giro    
-    this.droneMesh.position.addScaledVector(this.velocity,segs);
+    this.Position.addScaledVector(this.velocity,segs);
     this.orientationEuler.addScaledVector(this.wBody, segs);
-    this.droneMesh.rotation.setFromVector3(this.orientationEuler);       
+    this.Rotation.setFromVector3(this.orientationEuler);       
   }
 
-  private rotateArrow(){
+ /*  private rotateArrow(){
     this.arrow.setRotationFromEuler(this.droneMesh.rotation);
-  }
+  } */
 
   /**
    * Calcula el momento de inercia en cada uno de los ejes
@@ -354,6 +299,6 @@ export class TDrone3D{
   }
 
   private static ToString(v:THREE.Vector3){
-    return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)}]`
+    return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)}]`;
   }
 }

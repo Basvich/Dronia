@@ -8,6 +8,11 @@
       "files": [
         "*.ts"
       ],
+       // We set parserOptions.project for the project to allow TypeScript to create the type-checker behind the scenes when we run linting
+      "parserOptions": {        
+        "project": ["tsconfig.app.json"],        
+        "createDefaultProgram": true
+      },
       "extends": [
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
@@ -16,21 +21,31 @@
       ],
       "rules": {
         "@angular-eslint/directive-selector": [
-          "error",
-          {
-            "type": "attribute",
-            "prefix": "app",
-            "style": "camelCase"
-          }
-        ],
-        "@angular-eslint/component-selector": [
-          "error",
-          {
-            "type": "element",
-            "prefix": "app",
-            "style": "kebab-case"
-          }
-        ]
+          "error", {  "type": "attribute",  "prefix": "app",   "style": "camelCase"  } ],
+        "@angular-eslint/component-selector": [ "error",  { "type": "element",  "prefix": "app",  "style": "kebab-case"} ],
+        "require-await":"error",
+        "@typescript-eslint/no-floating-promises": ["warn",{ "ignoreVoid": true }]   ,
+        "@typescript-eslint/prefer-readonly-parameter-types":["off",{"checkParameterProperties":false,"ignoreInferredTypes":true, "treatMethodsAsReadonly":true}],        
+        "no-await-in-loop":"warn",
+        "no-promise-executor-return":"warn",
+        "max-nested-callbacks":"warn",
+        "no-return-await":"warn",
+        "object-shorthand": ["warn", "always"],
+         "no-array-constructor":"warn",
+         "array-callback-return":"warn",
+         "prefer-destructuring": ["warn", {"object": true, "array": false}],
+         "prefer-rest-params":"warn",
+         "no-loop-func":"error",
+         "no-param-reassign":"warn",
+         "prefer-arrow-callback":"error",
+         "arrow-parens":["warn","always"],
+         "class-methods-use-this":"warn",
+         "no-iterator":"warn",
+         "eqeqeq":"warn",
+         "nonblock-statement-body-position":"warn",
+         "no-else-return":"error",
+         "padded-blocks":["warn","never"],
+         "semi":"warn"
       }
     },
     {

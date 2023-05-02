@@ -65,7 +65,6 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
         this.camera.updateProjectionMatrix();
       }
     }
-
   }
 
   private render(msTime: number) {
