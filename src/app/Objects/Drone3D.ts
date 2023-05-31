@@ -8,7 +8,7 @@ interface IDroneDimes{
   helSepWith:number;
   /** Separacion longitudinal sobre eje X con el centro gravedad))*/
   helSepLong:number;
-  /** Dimensiones del cuerpo [x,y,z] */
+  /** Dimensiones del cuerpo [x,y,z], donde z es hacia arriba */
   body:[number, number, number]
 }
 
@@ -130,7 +130,7 @@ export class TDrone3D{
     this.lapseAcum+=elapsedSg;
     if(this.simStep % 128===0){
       const vr=(this.orientationEuler.z-this.lastRot)/this.lapseAcum;
-      console.log(`-- Rot medida: ${vr.toFixed(2)} rad/s --`);
+      //console.log(`-- Rot medida: ${vr.toFixed(2)} rad/s --`);
       this.lapseAcum=0;
       this.lastRot=this.orientationEuler.z;
     }
@@ -147,6 +147,11 @@ export class TDrone3D{
     this.Position.set(0,4,0);
     this.pithBalance=0;
     this.totalForce=pesoFuerza;
+  }
+
+  /** Envia al log información básica de la posición y velocidad */
+  public Print(){
+    console.log(`pos:[${this.Position.y}] vel:[${this.velocity.y}]`);
   }
  
 
@@ -200,7 +205,7 @@ export class TDrone3D{
     this.resultAccel.add(this.mG);
     this.resultAccel.divideScalar(masa); 
     if(this.simStep % 128===0){      
-      console.log(`calcRotorForces() resultAc:${TDrone3D.ToString(this.resultAccel)}`);
+      //console.log(`calcRotorForces() resultAc:${TDrone3D.ToString(this.resultAccel)}`);
     }
   }
 
@@ -222,7 +227,7 @@ export class TDrone3D{
       const factor=(1-absW/maxAngZVelRotorForce);
       tz=factor*tz;  //Se disminuye en proporcion la fuerza
       if(this.simStep % 128===0){
-        console.log(`calcMomentForce() maxAngZVelRotorForce: ${maxAngZVelRotorForce.toFixed(2)} absW:${absW.toFixed(2)}  factor:${factor.toFixed(2)}`);
+        //console.log(`calcMomentForce() maxAngZVelRotorForce: ${maxAngZVelRotorForce.toFixed(2)} absW:${absW.toFixed(2)}  factor:${factor.toFixed(2)}`);
       }
     } else tz=0;
     //Se aplica la fuerza para obtener la aceleracion
@@ -230,7 +235,7 @@ export class TDrone3D{
     const az=tz/this.momentoInercia.z;  //En rad/s
     this.resultTorque.set(ax,0,az);
     if(this.simStep % 128===0){
-      console.log(`calcMomentForce() tz:${tz.toFixed(2)}  az:${az.toFixed(2)} wz:${this.wBody.z.toFixed(2)}`);
+      //console.log(`calcMomentForce() tz:${tz.toFixed(2)}  az:${az.toFixed(2)} wz:${this.wBody.z.toFixed(2)}`);
     }
   }
 
@@ -260,9 +265,9 @@ export class TDrone3D{
     this.velocity.addScaledVector(this.linealResistence,segs);    
     //this.wBody.addScaledVector(this.rotationalResistence, segs);
     if(this.simStep % 128===0){
-      const vdifRot=this.rotationalResistence.z*segs;
+      /* const vdifRot=this.rotationalResistence.z*segs;
       console.log(`calcMovment() wBody.z:${this.wBody.z.toFixed(2)} rad/s  rot resistence: ${this.rotationalResistence.z.toFixed(2)} Wdif=${vdifRot.toFixed(2)}  segs:${segs}}`);
-      console.log(`calcMovment() resultAc:${TDrone3D.ToString(this.resultAccel)} linealResistence.y:${this.linealResistence.y.toFixed(2)}`);
+      console.log(`calcMovment() resultAc:${TDrone3D.ToString(this.resultAccel)} linealResistence.y:${this.linealResistence.y.toFixed(2)}`); */
     }  
 
     //Finalmente se actualiza la posición y el angulo de giro    
