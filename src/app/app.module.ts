@@ -7,13 +7,15 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from 'src/material.module';
 import { BasicSceneComponent } from './basic-scene/basic-scene.component';
 import { ThreeRenderComponent } from './three-render/three-render.component';
+import { LearnGraphComponent } from './Dlg/learn-graph/learn-graph.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
     BasicSceneComponent,
-    ThreeRenderComponent
+    ThreeRenderComponent,
+    LearnGraphComponent
   ],
   imports: [
     BrowserModule,

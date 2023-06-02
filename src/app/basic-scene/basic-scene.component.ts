@@ -27,7 +27,7 @@ export class BasicSceneComponent {
   drone?: TDrone3D;
   droneMesh?: TDroneMesh;
   /** Limites de la escena actual por donde se mueve el drone */
-  sceneLimits = new THREE.Box3(new THREE.Vector3(-10, 0, 0), new THREE.Vector3(10, 10, 20));
+  sceneLimits = new THREE.Box3(new THREE.Vector3(-12, 0, -12), new THREE.Vector3(12, 12, 12));
   droneLearnCtx?:DroneLearnContext;
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
@@ -155,6 +155,10 @@ export class BasicSceneComponent {
     if(!this.droneLearnCtx) this.droneLearnCtx=new DroneLearnContext(this.drone);
     void this.droneLearnCtx.LearnCicle();
     //void this.droneLearnCtx.LearnDummy();
+  }
+
+  public viewLearningGraph(){
+    
   }
 
   /**

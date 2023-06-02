@@ -4,58 +4,35 @@
   </div>
   <div class="trheeScene">    
     <app-three-render></app-three-render>
+    <!-- <div class="mockRender">
+      <span>dummy</span>
+    </div> -->
   </div>
   <div class="controlsGroup">
-    <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
-    
-    <!-- <mat-card>
-      <mat-card-header class="C1">
-        Rotacion
-      </mat-card-header>
-      <mat-card-content class="verticalGroup">
-        <div><span>X</span>
-          <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
-            <input matSliderThumb [(value)]="RotX">
-          </mat-slider>
-        </div>
-        <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
-          <input matSliderThumb [(value)]="RotY">
-        </mat-slider>
-        <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete>
-          <input matSliderThumb [(value)]="RotZ">
-        </mat-slider>
-      </mat-card-content>
-    </mat-card> -->
-    <mat-card>
-      <mat-card-header class="C1">
-        Control
-      </mat-card-header>
-      <mat-card-content class="verticalGroup">
-        <div><span>Power</span>
-          <mat-slider style=" width: 100px;" min="0" max="20" step="0.05" discrete>
-            <input matSliderThumb [(value)]="TotalForce">
-          </mat-slider>
-        </div>
-        <div><span>Pitch</span>
-          <mat-slider style=" width: 100px;" min="-1" max="1" step="0.1" discrete>
-          <input matSliderThumb [(value)]="PitchBalance">
+    <div class="verticalGroup">
+      <h4>controls</h4>
+      <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
+      <div><span>Power</span>
+        <mat-slider  min="0" max="20" step="0.05" discrete>
+          <input matSliderThumb [(value)]="TotalForce">
         </mat-slider>
       </div>
-        <div><span>Roll</span>
-          <mat-slider style=" width: 100px;" min="-3" max="3" step="0.1" discrete disabled="true">
-            <input matSliderThumb >
-          </mat-slider>
-        </div>
-      </mat-card-content>
-    </mat-card>
-    <mat-card>
-      <mat-card-header class="C1">
-        Tests
-      </mat-card-header>
-      <mat-card-content>
-        <button mat-button color="secondary" (click)="testCicle()">Test adapters</button>
-        <button mat-button color="secondary" (click)="testDroneContext()">Test DroneLearn</button>
-      </mat-card-content>
-    </mat-card>
+      <div><span>Pitch</span>
+        <mat-slider  min="-1" max="1" step="0.1" discrete>
+        <input matSliderThumb [(value)]="PitchBalance">
+      </mat-slider>
+    </div>
+      <div><span>Roll</span>
+        <mat-slider  min="-3" max="3" step="0.1" discrete disabled="false">
+          <input matSliderThumb >
+        </mat-slider>
+      </div>
+    </div>
+    <div class="verticalGroup">
+      <h4>tests</h4>
+      <button mat-button color="secondary" (click)="testCicle()">Test adapters</button>
+        <button mat-flat-button color="primary" (click)="testDroneContext()">Test DroneLearn</button>
+        <button mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
+    </div>   
   </div>
 </div>

@@ -54,7 +54,7 @@ export class ActionsMemory {
     /* const d = lastReward / this.data.length;
     this.data.forEach((value) => value.reward += d); */
     //this.data[this.data.length - 1].reward+=lastReward;
-    this.distributeLinear(lastReward, 10);
+    this.distributeLinear(lastReward, 32);
     // eslint-disable-next-line no-param-reassign
     this.totalReward = this.data.reduce((acum, value) => acum += value.reward, 0);
     this.finalReward = this.data[this.data.length - 1].reward;

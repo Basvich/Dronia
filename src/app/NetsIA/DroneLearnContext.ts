@@ -5,8 +5,9 @@ import AdapterDroneTf from "./AdapterDroneTf";
 import { Model1D } from "./ModelIA1D";
 import { TReward } from "./TRewards";
 import * as tf from '@tensorflow/tfjs';
+import { Random } from "../Objects/utils";
 
-const MaxSteps = 400;
+const MaxSteps = 500;
 
 /** Entorno para poder ir realizando el aprendizaje durante varios ciclos */
 export class DroneLearnContext{
@@ -16,7 +17,7 @@ export class DroneLearnContext{
    /** La red que aprende */
    private model1D = new Model1D();
    /** Limites de la escena actual por donde se mueve el drone */
-  sceneLimits = new THREE.Box3(new THREE.Vector3(-10, 0, 0), new THREE.Vector3(10, 10, 20));
+  sceneLimits = new THREE.Box3(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(12, 12, 12));
    
    public constructor(private drone: TDrone3D){
      this.adapter=new AdapterDroneTf(drone);
@@ -25,19 +26,23 @@ export class DroneLearnContext{
    }
 
    public async LearnCicle(){
-    const am: ActionsMemory = new ActionsMemory(500);
+    const am: ActionsMemory = new ActionsMemory(300);
     
     let isDone = false;
     let isInside = true;
     let stepCount = 0;
     this.drone.Reset(); //Partimos de la misma posición...
+    const y0=Random.next(0.5, 11.5);
+    const vy0=Random.next(-3, 3);
+    this.drone.Position.set(0, y0, 0);
+    this.drone.Velocity.set(0, vy0 ,0);
     
     while (stepCount < MaxSteps && !isDone && isInside) {
       const droneState = this.adapter.getStateTensor();
       const r = this.model1D.predict(droneState);
       //console.log(r);
       let forcedI: number | undefined=undefined;
-      if(Math.random()<0.1){  //Un 10% de escoger una ruta aleatoria
+      if(Math.random()<0.05){  //Un 5% de escoger una ruta aleatoria
         forcedI=Math.floor(Math.random()*5);
       }
       const info = this.adapter.setControlData(r, forcedI);
@@ -63,8 +68,11 @@ export class DroneLearnContext{
     }
     console.log('Fuera de los limites');
     let lastReward = 0;
-    if (!isInside) lastReward = this.jury.badReward;
-    if (isDone) lastReward = this.jury.goodReward;
+    if (!isInside) {
+      lastReward = this.jury.badReward;
+    }  else if (isDone){
+       lastReward = this.jury.goodReward;
+    } else lastReward+=this.jury.badMiniReward;
     am.finalize(lastReward);
     await this.replayAndTrain(am);
     am.dispose();
@@ -104,8 +112,7 @@ export class DroneLearnContext{
     /* const d1=[ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
     const example1 = tf.tensor2d(d1);
     const example2 = tf.tensor2d({values: d1}); */
-
-    const batchSize = 100;
+    
     /* Tenemos outputNumActions como posibles salidas, cada una de ellas tendrá una recompensa prevista, lo que queremos
     es entrenar la red para que maneje */
     let i = 0;
@@ -115,7 +122,8 @@ export class DroneLearnContext{
     const y0: number[][] = []; //
     let lastx0:number[]=[];
     let lasty0:number[]=[];
-    const gamma=0.9;
+    /**Balanceo sobre la importancia de valor futuros o solo el actual (mas alto mayor futuro) */
+    const gamma=0.4;
 
     batch.forEach((d) => {
       const state = d.current.currentState.dataSync();  //Un array con 2 valores float
@@ -129,7 +137,7 @@ export class DroneLearnContext{
       buffer.toTensor() */
       const currentQ = d.current.action.dataSync(); //Array con 5 floats
       const indexOfAction = d.current.info.indexActionY;
-      const reward = d.current.reward+gamma*d.nextMaxReward;
+      const reward = (1-gamma)*d.current.reward + gamma*d.nextMaxReward;
       currentQ[indexOfAction] = reward; //buffer.set(reward, indexOfAction); //actions[indexOfAction]=reward
       //const t = buffer.toTensor() as tf.Tensor2D;  //Se reconvierte a tensor
       lasty0=Array.from(currentQ);

@@ -34,7 +34,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.createScene();
-    this.startWebGl();
+    this.startWebGl(); 
   }
 
   ngOnDestroy(): void {
@@ -45,6 +45,10 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     // Solicita al navegador que programe el repintado de la ventana
     //requestAnimationFrame(this.render.bind(this));
     requestAnimationFrame(()=>this.update());
+  }
+
+  public onResized(event: unknown){
+    console.log(event);
   }
 
   private update(){
@@ -89,7 +93,8 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     const height = canvas.clientHeight;
     const needResize = canvas.width !== width || canvas.height !== height;
     if (needResize) {
-      renderer.setSize(width, height, false);
+      //console.log(`canvas render resize: (${canvas.width}, ${canvas.height}) -> (${canvas.clientWidth}, ${canvas.clientHeight})`);
+      renderer.setSize(width, height, false); 
     }
     return needResize;
   }
