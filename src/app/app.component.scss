@@ -1,0 +1,12 @@
+.totalContainer{
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.routerSection{
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: auto;
+}
