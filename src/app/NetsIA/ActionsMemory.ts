@@ -6,11 +6,11 @@ import { InfoAction } from './AdapterDroneTf';
 /**
  * Un paso de lo almacenado
  */
-export interface IActionReward {
+export interface IActionReward<TState, TAction> {
   /** estado actual */
-  currentState: tf.Tensor2D;
+  currentState: TState;// tf.Tensor2D;
   /** Conjunto de acciones tomadas */
-  action: tf.Tensor2D;
+  action: TAction;//tf.Tensor2D;
   /** Información para evitar recalculos */
   info: InfoAction;
   /**recompensa en este estado (corresponde a la accion tomada en el estado anterior) */
@@ -18,24 +18,24 @@ export interface IActionReward {
 }
 
 
-export interface IActionReplay{
-   current: IActionReward;
-   next?: IActionReward;
+export interface IActionReplay<TState, TAction>{
+   current: IActionReward<TState, TAction>;
+   next?: IActionReward<TState, TAction>;
    nextMaxReward:number 
 }
 /**
  * Sirve para almacenar las acciones de un ciclo de simulacion (hasta que se estrella o timeout)
  */
-export class ActionsMemory {
+export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor > {
   private finalized = false;
-  data: IActionReward[] = [];
+  data: IActionReward<TState, TAction>[] = [];
   totalReward = 0;
   finalReward = 0;
 
   public constructor(public maxLength: number) { }
 
   /**Guarda una acción junto la recompensa obtenida (despues de simular el cambio del sistema con la acción) */
-  public add(sample: IActionReward) {
+  public add(sample: IActionReward<TState, TAction>) {
     if (this.finalized) throw new Error("aldready finalized");
     this.data.push(sample);
     if (this.data.length > this.maxLength) {
@@ -84,7 +84,7 @@ export class ActionsMemory {
    * @param nSamples Cuantos samples, si no está se devuelven todos en el orden original
    * @returns un array de los samples con la recompensa del estado siguiente
    */
-  public samples(nSamples?: number): { current: IActionReward; next: IActionReward; }[] {    
+  public samples(nSamples?: number): { current: IActionReward<TState, TAction>; next: IActionReward<TState, TAction>; }[] {    
     const max = this.data.length - 1;
     const res = [];
     if (nSamples) {
@@ -104,10 +104,10 @@ export class ActionsMemory {
     return res;
   }
 
-  public getAllSamples():IActionReplay[]{
+  public getAllSamples():IActionReplay<TState, TAction>[]{
     const f=this.data.length-1;   
-    const res : IActionReplay[]=new Array<IActionReplay>(this.data.length); 
-    let next:IActionReward | undefined=undefined;
+    const res : IActionReplay<TState, TAction>[]=new Array<IActionReplay<TState, TAction>>(this.data.length); 
+    let next:IActionReward<TState, TAction> | undefined=undefined;
     let nextMaxReward=this.data[f].reward;
     //Yendo hacia atras, rellenamos el maximo en cada paso bien y el next a la vez
     for(let i=f; i>=0; i--){

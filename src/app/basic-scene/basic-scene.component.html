@@ -30,12 +30,13 @@
     </div>
     <div class="verticalGroup">
       <h4>tests</h4>
-      <button mat-button color="secondary" (click)="testCicle()">Test adapters</button>
-        <button mat-flat-button color="primary" (click)="testDroneContext()">Test DroneLearn</button>
-        <button mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
+      <button [disabled]="true" mat-button color="secondary">Test adapters</button>
+      <input matInput type="number"  placeholder="num cicles" min="1" max="20" step="4" [(ngModel)]="numCicles" >
+        <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneContext()">Test DroneLearn</button>
+        <button  mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
     </div>   
     <div>
-      <app-drone1-d></app-drone1-d>
+      <app-drone1-d [droneContext]="droneLearnCtx" [cicleCount]="ciclesCount"></app-drone1-d>
     </div>
   </div>
 </div>

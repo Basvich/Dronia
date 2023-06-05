@@ -10,6 +10,7 @@ import { ThreeRenderComponent } from './three-render/three-render.component';
 import { LearnGraphComponent } from './Dlg/learn-graph/learn-graph.component';
 import { Drone1DComponent } from './graph/drone1-d/drone1-d.component';
 import { NgChartsModule } from 'ng2-charts';
+import { FormsModule } from '@angular/forms';
 
 
 @NgModule({
@@ -18,14 +19,15 @@ import { NgChartsModule } from 'ng2-charts';
     BasicSceneComponent,
     ThreeRenderComponent,
     LearnGraphComponent,
-    Drone1DComponent
+    Drone1DComponent    
   ],
   imports: [
+    MaterialModule,
     BrowserModule,
     AppRoutingModule,
-    BrowserAnimationsModule,
-    MaterialModule,
-    NgChartsModule
+    BrowserAnimationsModule,    
+    NgChartsModule,
+    FormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

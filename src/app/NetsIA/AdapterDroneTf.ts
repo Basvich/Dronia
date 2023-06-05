@@ -16,7 +16,7 @@ export default class AdapterDroneTf {
   private forces: number[];
   /**El target de la posición deseada */
   public targetY = 10;
-  public get Forces(): number[] {return this.forces;}
+  public get Forces(): number[] { return this.forces; }
 
   constructor(private drone: TDrone3D) {
     this.forces = [drone.FuerzaNeutra * 0.50, drone.FuerzaNeutra * 0.8, drone.FuerzaNeutra, drone.FuerzaNeutra * 1.2, drone.FuerzaNeutra * 1.8];
@@ -42,8 +42,10 @@ export default class AdapterDroneTf {
    */
   public setControlData(data: tf.Tensor2D | undefined, forcedI?: number): InfoAction | undefined {
     if (!data) return;
-    //const m1=data.argMax();
-    //m1.print();
+    const m1=data.argMax();
+    //m1.data();
+    m1.print();
+    m1.dispose();
     const tensorData = data.dataSync();
     /* for(let i=0; i< tensorData.length; i++){
       const v=tensorData[i];
@@ -70,7 +72,39 @@ export default class AdapterDroneTf {
     return { indexActionY: i };
   }
 
-  public TotalRelativeForce(index:number):number{
-    return this.forces[index]/this.drone.FuerzaNeutra;
+  public TotalRelativeForce(index: number): number {
+    return this.forces[index] / this.drone.FuerzaNeutra;
+  }
+
+  /**
+   * 
+   * @param dataXY array de [Y, velY]
+   * @returns un tensor ajustado según el propio adaptador
+   */
+  public getMappedTensor(dataXY: number[][]): tf.Tensor2D {
+    //if (dataXY.length !== 2) throw new Error('Tiene que tener un array X y otro Y de identicas dimensiones');
+    
+    //Devuelve un array con vectores[y, vely]
+    const arrXY = dataXY.map((value) => {
+      let posY = THREE.MathUtils.clamp(value[0] - this.targetY, -20, 20);
+      posY = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
+      let velY = THREE.MathUtils.clamp(value[1], -10, 10);
+      velY = THREE.MathUtils.mapLinear(velY, -10, 10, -1, 1);
+      return [posY, velY];
+    });
+    return tf.tensor2d(arrXY);
+
+    /* //Devuelve un array con vectores [y], [vely]
+    const arrPosyY=dataXY.map((value) => {
+      let posY = THREE.MathUtils.clamp(value[0] - this.targetY, -20, 20);
+      posY = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
+      return posY;
+    });
+    const arrVelY=dataXY.map((value) => {
+      let velY = THREE.MathUtils.clamp(value[1], -10, 10);
+      velY = THREE.MathUtils.mapLinear(velY, -10, 10, -1, 1);
+      return velY;
+    }); 
+    return tf.tensor2d([arrPosyY, arrVelY]);*/
   }
 }

@@ -58,11 +58,13 @@ export class Model1D {
         activation: 'relu',
         // `inputShape` is required only for the first layer.
         inputShape: i === 0 ? [this.inputNumStates] : undefined,
-        biasInitializer:tf.initializers.zeros (), //Notar que forzamos una inicialización a 0 para probar
-        kernelInitializer:tf.initializers.zeros ()
+        //biasInitializer:tf.initializers.zeros (), //Notar que forzamos una inicialización a 0 para probar
+        //kernelInitializer:tf.initializers.zeros ()
       }));
     });
-    network.add(tf.layers.dense({ units: this.outputNumActions, biasInitializer:tf.initializers.zeros (),  kernelInitializer:tf.initializers.zeros ()}));
+    network.add(tf.layers.dense({ units: this.outputNumActions, biasInitializer:tf.initializers.zeros (),
+        //kernelInitializer:tf.initializers.zeros ()
+      }));
     network.summary();
     network.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
     this.model = network;

@@ -7,6 +7,7 @@ import{MatSidenavModule} from '@angular/material/sidenav';
 import {MatSliderModule} from '@angular/material/slider';
 import {MatListModule} from '@angular/material/list';
 
+
 @NgModule({
     exports: [
         MatButtonModule,

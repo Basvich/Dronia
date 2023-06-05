@@ -1,9 +1,9 @@
 <div>
-  <canvas baseChart width="300" height="200"
-    [type]="'line'"
-    [data]="lineChartData"
+  <canvas baseChart width="400" height="200"
+    [type]="'line'"    
     [options]="lineChartOptions"
+    [data]="lineChartData"
     [legend]="lineChartLegend">
   </canvas>
-  <div><input matInput type="number"  placeholder="Vel Y" min="-2" max="2" step="0.5" value="{{VelY}}" (change)="changedVel()"></div>
+  <div><input matInput type="number"  placeholder="Vel Y" min="-2" max="2" step="0.5" [(ngModel)]="VelY"  (change)="changedVel()"></div>
 </div>

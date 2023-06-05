@@ -28,7 +28,12 @@ export class BasicSceneComponent {
   droneMesh?: TDroneMesh;
   /** Limites de la escena actual por donde se mueve el drone */
   sceneLimits = new THREE.Box3(new THREE.Vector3(-12, 0, -12), new THREE.Vector3(12, 12, 12));
-  droneLearnCtx?:DroneLearnContext;
+  droneLearnCtx?: DroneLearnContext;
+  /** Numero de ciclos de aprendizaje con cada click */
+  numCicles = 1;
+  /** Cuenta de ciclos de aprendizaje realizados */
+  ciclesCount = 0;
+  bussy = false;
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
@@ -100,8 +105,8 @@ export class BasicSceneComponent {
     this.droneMesh?.updateFromDrone();
   }
 
-  /** Realiza un ciclo de simulación entero, o sea hasta que se sale o acaba el tiempo para el drone */
-  public async testCicle() {
+  
+  /* public async testCicle() {
     if (!this.drone) return;
     if (!this.jury) {
       this.jury = new TReward();
@@ -123,10 +128,10 @@ export class BasicSceneComponent {
       const info = adapter.setControlData(r);
       //Ciclos de simulación del objeto
       this.drone.Simulate(0.1); //Simulamos en pasos de 100ms
-      
+
       const reward = this.jury.InstanReward(this.drone);
-      if(cicleCount % 4 ===0){
-        console.log(`${cicleCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}`);      
+      if (cicleCount % 4 === 0) {
+        console.log(`${cicleCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}`);
       }
       cicleCount++;
       isInside = this.IsInBoundLimits(this.drone);
@@ -148,17 +153,26 @@ export class BasicSceneComponent {
     am.finalize(lastReward);
     await this.replayAndTrain(am, this.model1D);
     am.dispose();
-  }
+  } */
 
-  public testDroneContext(){
-    if(!this.drone) return;
-    if(!this.droneLearnCtx) this.droneLearnCtx=new DroneLearnContext(this.drone);
-    void this.droneLearnCtx.LearnCicle();
+  public async testDroneContext() {
+    if (!this.drone || this.bussy) return;
+    this.bussy = true;
+    console.clear();
+
+    if (!this.drone) return;
+    if (!this.droneLearnCtx) this.droneLearnCtx = new DroneLearnContext(this.drone);
+    for (let i = 0; i < this.numCicles; i++) {
+      await this.droneLearnCtx.LearnCicle();
+    }
+    this.ciclesCount += this.numCicles;
+    this.bussy = false;
+
     //void this.droneLearnCtx.LearnDummy();
   }
 
-  public viewLearningGraph(){
-    
+  public viewLearningGraph() {
+     console.warn('nada');
   }
 
   /**
@@ -171,7 +185,7 @@ export class BasicSceneComponent {
   }
 
 
-  private async replayAndTrain(am: ActionsMemory, model1D: Model1D) {
+  private async replayAndTrain(am: ActionsMemory<tf.Tensor2D, tf.Tensor2D>, model1D: Model1D) {
     /* const d1=[ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
     const example1 = tf.tensor2d(d1);
     const example2 = tf.tensor2d({values: d1}); */
@@ -184,7 +198,7 @@ export class BasicSceneComponent {
     const batch = am.getAllSamples();
     const x0: number[][] = [];
     const y0: number[][] = []; //
-    const gamma=0.9;
+    const gamma = 0.9;
 
     batch.forEach((d) => {
       const state = d.current.currentState.dataSync();  //Un array con 2 valores float
@@ -197,7 +211,7 @@ export class BasicSceneComponent {
       buffer.toTensor() */
       const currentQ = d.current.action.dataSync(); //Array con 5 floats
       const indexOfAction = d.current.info.indexActionY;
-      const reward = d.current.reward+gamma*d.nextMaxReward;
+      const reward = d.current.reward + gamma * d.nextMaxReward;
       currentQ[indexOfAction] = reward; //buffer.set(reward, indexOfAction); //actions[indexOfAction]=reward
       //const t = buffer.toTensor() as tf.Tensor2D;  //Se reconvierte a tensor
       y0.push(Array.from(currentQ));
@@ -206,7 +220,7 @@ export class BasicSceneComponent {
     const ys = tf.tensor2d(y0, [y0.length, model1D.outputNumActions]); //Tensor con 100 (samples) * 5 valores
     //Hay que entrenar el modelo con entradas igual a los estados almacenados y como salidas deseadas correspondiente a cada entrada el array de estados
     // eslint-disable-next-line no-await-in-loop
-    const h=await model1D.train(xs, ys);
+    const h = await model1D.train(xs, ys);
     console.log(h);
     //model1D.model?.fit()
     xs.dispose();

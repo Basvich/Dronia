@@ -26,7 +26,7 @@ export class DroneLearnContext{
    }
 
    public async LearnCicle(){
-    const am: ActionsMemory = new ActionsMemory(300);
+    const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(300);
     
     let isDone = false;
     let isInside = true;
@@ -56,7 +56,7 @@ export class DroneLearnContext{
       stepCount++;
       isInside = this.IsInBoundLimits(this.drone);
       if (r && info) {
-        const d: IActionReward = {
+        const d: IActionReward<tf.Tensor2D, tf.Tensor2D> = {
           currentState: droneState,
           action: r,
           reward,
@@ -104,11 +104,31 @@ export class DroneLearnContext{
      }
    }
 
+   public predictValues(samples: [number, number][]):number[][] {
+    const res=[];
+     const states=this.adapter.getMappedTensor(samples);
+     const r = this.model1D.predict(states);
+     states.dispose();
+     if(r){
+      const tensorData = r.dataSync();
+      //Separamos en trozos de 5
+      for(let i=0; i<tensorData.length; i+=5){
+        const d=[];
+        for(let j=0; j < 5; j++){
+          d.push(tensorData[i+j]);
+        }
+        res.push(d);
+      }
+     }
+     r?.dispose();
+     return res;
+   }
+
    dummyPredict(states: tf.Tensor | tf.Tensor[]):tf.Tensor2D | undefined {    
     return tf.tidy(() => this.modelDummy.predict(states)) as tf.Tensor2D;
   }
 
-   private async replayAndTrain(am: ActionsMemory) {
+   private async replayAndTrain(am: ActionsMemory<tf.Tensor2D, tf.Tensor2D>) {
     /* const d1=[ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
     const example1 = tf.tensor2d(d1);
     const example2 = tf.tensor2d({values: d1}); */
@@ -123,7 +143,7 @@ export class DroneLearnContext{
     let lastx0:number[]=[];
     let lasty0:number[]=[];
     /**Balanceo sobre la importancia de valor futuros o solo el actual (mas alto mayor futuro) */
-    const gamma=0.4;
+    const gamma=0.3;
 
     batch.forEach((d) => {
       const state = d.current.currentState.dataSync();  //Un array con 2 valores float
