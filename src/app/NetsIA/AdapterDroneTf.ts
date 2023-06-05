@@ -42,10 +42,10 @@ export default class AdapterDroneTf {
    */
   public setControlData(data: tf.Tensor2D | undefined, forcedI?: number): InfoAction | undefined {
     if (!data) return;
-    const m1=data.argMax();
+    //const m1=data.argMax();
     //m1.data();
-    m1.print();
-    m1.dispose();
+    //m1.print();
+    //m1.dispose();
     const tensorData = data.dataSync();
     /* for(let i=0; i< tensorData.length; i++){
       const v=tensorData[i];

@@ -39,22 +39,24 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     if (this.finalized) throw new Error("aldready finalized");
     this.data.push(sample);
     if (this.data.length > this.maxLength) {
-      const [first] = this.data.splice(0);
+      //console.log(`[ActionsMemory] len: ${this.data.length} max: ${this.maxLength}`);
+      const [first] = this.data.splice(0, 1);
       if (first) {  //Es necesario liberar los tensores almacenados
-        first.currentState.dispose();
+        //console.log('deleted');
+        first.currentState.dispose();        
         first.action.dispose();
       }
     }
   }
 
   /**Finaliza y normaliza todos los samples repartiendo el premio final entre todos los samples */
-  public finalize(lastReward: number) {
+  public finalize(lastReward: number, numItems=32) {
     if (this.finalized) return;
     this.finalized = true;
     /* const d = lastReward / this.data.length;
     this.data.forEach((value) => value.reward += d); */
     //this.data[this.data.length - 1].reward+=lastReward;
-    this.distributeLinear(lastReward, 32);
+    this.distributeLinear(lastReward, numItems);
     // eslint-disable-next-line no-param-reassign
     this.totalReward = this.data.reduce((acum, value) => acum += value.reward, 0);
     this.finalReward = this.data[this.data.length - 1].reward;
@@ -78,32 +80,6 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     }
   }
 
-  /**
-   * Devuelve samples tomados aleatoriamente
-   * @deprecated
-   * @param nSamples Cuantos samples, si no está se devuelven todos en el orden original
-   * @returns un array de los samples con la recompensa del estado siguiente
-   */
-  public samples(nSamples?: number): { current: IActionReward<TState, TAction>; next: IActionReward<TState, TAction>; }[] {    
-    const max = this.data.length - 1;
-    const res = [];
-    if (nSamples) {
-      for (let i = 0; i < nSamples; i++) {
-        const index = Math.floor(Math.random() * max);
-        const current = this.data[index];
-        const next = this.data[index + 1];
-        res.push({ current, next });
-      }
-    } else {
-      for(let i=0; i<max; i++){
-        const current=this.data[i];
-        const next=this.data[i + 1];
-        res.push({ current, next });
-      }
-    }
-    return res;
-  }
-
   public getAllSamples():IActionReplay<TState, TAction>[]{
     const f=this.data.length-1;   
     const res : IActionReplay<TState, TAction>[]=new Array<IActionReplay<TState, TAction>>(this.data.length); 
@@ -112,7 +88,7 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     //Yendo hacia atras, rellenamos el maximo en cada paso bien y el next a la vez
     for(let i=f; i>=0; i--){
       const current=this.data[i];    
-      if(next && next.reward>nextMaxReward) nextMaxReward=current.reward;
+      if(next && next.reward>nextMaxReward) nextMaxReward=next.reward;
       //res.push({ current, next, nextMaxReward});
       res[i]={ current, next, nextMaxReward};
       next=current;

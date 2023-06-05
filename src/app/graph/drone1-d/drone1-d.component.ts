@@ -8,7 +8,7 @@ import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
   templateUrl: './drone1-d.component.html',
   styleUrls: ['./drone1-d.component.scss']
 })
-export class Drone1DComponent implements OnInit, AfterViewInit, OnChanges {
+export class Drone1DComponent implements AfterViewInit, OnChanges {
   private lastCicleCount=-10;
   public VelY=0.5;
 
@@ -57,13 +57,6 @@ export class Drone1DComponent implements OnInit, AfterViewInit, OnChanges {
     responsive: false
   };
   public lineChartLegend = true;
-
-  constructor() {    
-  }
- 
-
-  ngOnInit(): void {    
-  }
 
   ngAfterViewInit(): void {
     this.initChartData();

@@ -50,7 +50,7 @@ export class DroneLearnContext{
       this.drone.Simulate(0.1); //Simulamos en pasos de 100ms
       
       const reward = this.jury.InstanReward(this.drone);
-      if(info!==undefined && (stepCount % 20 ===0 || forcedI!== undefined || (stepCount+1===MaxSteps)) ){
+      if(info!==undefined && (stepCount % 100 ===0 || forcedI!== undefined || (stepCount+1===MaxSteps)) ){
         console.log(`${stepCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}  force:${this.adapter.TotalRelativeForce(info.indexActionY)}  ${forcedI!==undefined?'RND':''}`);      
       }
       stepCount++;
