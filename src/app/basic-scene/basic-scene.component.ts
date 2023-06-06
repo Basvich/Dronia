@@ -11,6 +11,9 @@ import * as tf from '@tensorflow/tfjs';
 import { TensorLike2D } from '@tensorflow/tfjs-core/dist/types';
 import { DroneLearnContext, ICicleOptions } from '../NetsIA/DroneLearnContext';
 import { Subject } from 'rxjs';
+import { MinLapseTroller } from '../Objects/utils';
+import { MatButtonToggleChange } from '@angular/material/button-toggle';
+import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 
 const Limits = {
@@ -26,6 +29,9 @@ const Limits = {
 export class BasicSceneComponent {
   private lastTimestap = 0;
   private learnCicleCount= new Subject<number>();
+  /** Para poder manejar el calback de peticion de control al contexto */
+  private minLapseAutopilot?:MinLapseTroller;
+  autoPilotOn=false;  
   drone?: TDrone3D;
   droneMesh?: TDroneMesh;
   /** Limites de la escena actual por donde se mueve el drone */
@@ -84,7 +90,7 @@ export class BasicSceneComponent {
     const mesh = this.droneMesh.Mesh;
     scene.add(mesh);
     //scene.add(drone.Arrow);
-    this.render.CalbackRenderLoop = (ms: number) => this.beforeRenderFrame(ms);
+    this.render.CalbackRenderLoop = (SgElapsed: number) => this.beforeRenderFrame(SgElapsed);
   }
 
   public test2() {
@@ -101,18 +107,32 @@ export class BasicSceneComponent {
     this.drone?.Reset();
   }
 
-  public static V3ToString(v: THREE.Vector3) {
-    return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)},]`;
+
+  /**Cuando se activa o desactiva el  */
+  public btnAutoPilotChanged($event: MatSlideToggleChange){    
+    const {checked} = $event;
+    if(checked){
+      if(!this.minLapseAutopilot){
+        this.minLapseAutopilot=new MinLapseTroller(0.1);
+      }
+    }else{
+      this.minLapseAutopilot=undefined;
+    }
   }
 
-  private beforeRenderFrame(sg: number) {
-    if (this.lastTimestap === 0) this.lastTimestap = sg - 0.04;
-    let dif = sg - this.lastTimestap;
-    this.lastTimestap = sg;
+  public static V3ToString(v: THREE.Vector3) {
+    return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)}]`;
+  }
+
+  private beforeRenderFrame(SgElapsed: number) {
+    if (this.lastTimestap === 0) this.lastTimestap = SgElapsed - 0.04;
+    let dif = SgElapsed - this.lastTimestap;
+    this.lastTimestap = SgElapsed;
     if (dif > 0.1) dif = 0.1;  // Bolqueo para poder depurar    
     if (!this.drone) return;
-    this.drone.Simulate(sg);
-    this.droneMesh?.updateFromDrone();
+    this.minLapseAutopilot?.ejecute(SgElapsed, ()=>{this.droneLearnCtx?.controlDrone();});
+    this.drone.Simulate(SgElapsed);
+    this.droneMesh?.updateFromDrone();    
   }
 
   
@@ -168,6 +188,7 @@ export class BasicSceneComponent {
   public async testDroneContext() {
     if (!this.drone || this.bussy) return;
     this.bussy = true;
+    this.minLapseAutopilot=undefined;
     console.clear();
 
     if (!this.drone) return;

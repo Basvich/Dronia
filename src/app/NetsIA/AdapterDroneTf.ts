@@ -15,7 +15,7 @@ export default class AdapterDroneTf {
   /** Simple simplificación segun la accion, la fuerza que le pedimos al dron. Creciente en potencia */
   private forces: number[];
   /**El target de la posición deseada */
-  public targetY = 10;
+  public targetY = 6;
   public get Forces(): number[] { return this.forces; }
 
   constructor(private drone: TDrone3D) {
@@ -35,10 +35,10 @@ export default class AdapterDroneTf {
   }
 
   /**
-   * son las posibilidades de cada accion.
-   * 2 niveles de fuerza por direccion + 0 (g)
+   * Toma la predicción obtenida de la red, y la traduce en el control al dron
+   * 
    * @param data El array con las posibilidades de cada accion
-   * @returns 
+   * @returns Información sobre la acción ejecutada
    */
   public setControlData(data: tf.Tensor2D | undefined, forcedI?: number): InfoAction | undefined {
     if (!data) return;
