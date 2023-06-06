@@ -14,6 +14,7 @@ export class TReward{
   /** Premio/penalización por acabar mal */
   public badReward=-20;
   public goodReward=20;
+  /** Por acabar sin conseguir nada */
   public badMiniReward=-5;
 
   public constructor(){
@@ -36,7 +37,7 @@ export class TReward{
    */
   public IsDone(drone:TDrone3D):boolean{
     let res=Math.abs(drone.Position.y-this.targetY)<=0.2;
-    res=res && Math.abs(drone.Velocity.y)<=0.05;
+    res=res && Math.abs(drone.Velocity.y)<=0.06;
     return res;
   }
 
@@ -71,6 +72,8 @@ export class TReward{
     const difY=futPosY- this.targetY; //Positivo está por encima
     const absDifY=Math.abs(difY);
     res=this.a*absDifY*absDifY + this.b*absDifY + this.c;
+    //Especial si es done:
+    if(absDifY<0.2 && Math.abs(velY)<=0.5) res+=5;
     return res;
   }
 }

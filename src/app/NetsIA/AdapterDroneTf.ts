@@ -19,7 +19,7 @@ export default class AdapterDroneTf {
   public get Forces(): number[] { return this.forces; }
 
   constructor(private drone: TDrone3D) {
-    this.forces = [drone.FuerzaNeutra * 0.50, drone.FuerzaNeutra * 0.8, drone.FuerzaNeutra, drone.FuerzaNeutra * 1.2, drone.FuerzaNeutra * 1.8];
+    this.forces = [drone.FuerzaNeutra * 0.00, drone.FuerzaNeutra * 0.5, drone.FuerzaNeutra, drone.FuerzaNeutra * 1.5, drone.FuerzaNeutra * 2];
   }
 
   /**
@@ -29,8 +29,8 @@ export default class AdapterDroneTf {
   public getStateTensor(): tf.Tensor2D {
     let posY = THREE.MathUtils.clamp(this.drone.Position.y - this.targetY, -20, 20);
     posY = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
-    let velY = THREE.MathUtils.clamp(this.drone.Velocity.y, -10, 10);
-    velY = THREE.MathUtils.mapLinear(velY, -10, 10, -1, 1);
+    let velY = THREE.MathUtils.clamp(this.drone.Velocity.y, -3, 3);
+    velY = THREE.MathUtils.mapLinear(velY, -3, 3, -1, 1);
     return tf.tensor2d([[posY, velY]]);
   }
 

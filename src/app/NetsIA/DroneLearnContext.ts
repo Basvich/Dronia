@@ -9,6 +9,11 @@ import { Random } from "../Objects/utils";
 
 const MaxSteps = 500;
 
+export interface ICicleOptions{
+  /** Factor de exploracion, en tre [0,1], es la probabilidad de seleccionar accion aleatoria */
+  explorationF?:number
+}
+
 /** Entorno para poder ir realizando el aprendizaje durante varios ciclos */
 export class DroneLearnContext{
    private adapter:AdapterDroneTf;
@@ -25,15 +30,15 @@ export class DroneLearnContext{
      this.modelDummy=this.createDummyModel();
    }
 
-   public async LearnCicle(){
-    const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(300);
-    
+   public async LearnCicle(opt?:ICicleOptions){
+    const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(500);
+    const rndExploracion=opt?.explorationF??0.05; //por defecto Un 5% de escoger una ruta aleatoria
     let isDone = false;
     let isInside = true;
     let stepCount = 0;
     this.drone.Reset(); //Partimos de la misma posición...
-    const y0=Random.next(0.5, 11.5);
-    const vy0=Random.next(-3, 3);
+    const y0=Random.gaussianRandom(6,2);//Random.next(0.2, 11.8);
+    const vy0=Random.gaussianRandom(0,1);//Random.next(-3, 3);
     this.drone.Position.set(0, y0, 0);
     this.drone.Velocity.set(0, vy0 ,0);
     
@@ -42,7 +47,7 @@ export class DroneLearnContext{
       const r = this.model1D.predict(droneState);
       //console.log(r);
       let forcedI: number | undefined=undefined;
-      if(Math.random()<0.05){  //Un 5% de escoger una ruta aleatoria
+      if(Math.random()<rndExploracion){ 
         forcedI=Math.floor(Math.random()*5);
       }
       const info = this.adapter.setControlData(r, forcedI);
@@ -124,10 +129,46 @@ export class DroneLearnContext{
      return res;
    }
 
+   public simulateCicle(posY:number, velY:number): { stepCount: number; lastReward: number; mean:number }{
+    this.drone.Reset(); //Partimos de la misma posición...
+    this.drone.Position.set(0, posY, 0);
+    this.drone.Velocity.set(0, velY ,0);
+    let isDone = false;
+    let isInside = true;
+    let stepCount = 0;
+    let reward=0;
+    const histRewards=[];
+    while (stepCount < MaxSteps && !isDone && isInside) {
+      const droneState = this.adapter.getStateTensor();
+      const r = this.model1D.predict(droneState);
+      droneState.dispose();
+      this.adapter.setControlData(r);
+      r?.dispose();      
+      this.drone.Simulate(0.1);
+      reward = this.jury.InstanReward(this.drone);
+      stepCount++;
+      isInside = this.IsInBoundLimits(this.drone);
+      isDone = this.jury.IsDone(this.drone);
+      histRewards.push(reward);
+    }
+    let lastReward = 0;
+    if (!isInside) {
+      lastReward = this.jury.badReward;
+    }  else if (isDone){
+       lastReward = this.jury.goodReward;
+    } else lastReward+=this.jury.badMiniReward;
+    lastReward+=reward;
+    histRewards[histRewards.length-1]=lastReward;
+    const mean=DroneLearnContext.mean(histRewards,100);
+    const res={stepCount, lastReward, mean};
+    return res;
+   }
+
    dummyPredict(states: tf.Tensor | tf.Tensor[]):tf.Tensor2D | undefined {    
     return tf.tidy(() => this.modelDummy.predict(states)) as tf.Tensor2D;
   }
 
+  /** Repite los ultimos datos simulados, guardando los datos obtenidos de la simulación */
    private async replayAndTrain(am: ActionsMemory<tf.Tensor2D, tf.Tensor2D>) {
     /* const d1=[ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
     const example1 = tf.tensor2d(d1);
@@ -142,8 +183,8 @@ export class DroneLearnContext{
     const y0: number[][] = []; //
     let lastx0:number[]=[];
     let lasty0:number[]=[];
-    /**Balanceo sobre la importancia de valor futuros o solo el actual (mas alto mayor futuro) */
-    const gamma=0.3;
+    /**Balanceo sobre la importancia de valor futuros o solo el actual ([0,1] mas alto mayor futuro) */
+    const gamma=0.4;
 
     batch.forEach((d) => {
       const state = d.current.currentState.dataSync();  //Un array con 2 valores float
@@ -210,5 +251,13 @@ export class DroneLearnContext{
     network.summary();
     network.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
     return network;
+  }
+
+  private static mean(data:number[], maxLength:number){
+    const l=Math.min(data.length, maxLength);
+    const d=data.slice(-l);
+    const sum = d.reduce((a, b) => a + b, 0);
+    const avg = (sum / d.length) || 0;
+    return avg;
   }
 }

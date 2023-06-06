@@ -1,24 +1,31 @@
-import { AfterViewInit, Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 import { ChartConfiguration, ChartOptions } from "chart.js";
 import { BaseChartDirective } from 'ng2-charts';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
 
+
+/**
+ * Muestra para distintas velocidades del drone, las recompensas esperadas para cada posible acción
+ */
 @Component({
   selector: 'app-drone1-d',
   templateUrl: './drone1-d.component.html',
   styleUrls: ['./drone1-d.component.scss']
 })
-export class Drone1DComponent implements AfterViewInit, OnChanges {
-  private lastCicleCount=-10;
+export class Drone1DComponent implements OnInit,  AfterViewInit, OnChanges, OnDestroy {
+  
+  private ngUnsubscribe: Subject<void> = new Subject<void>();
   public VelY=0.5;
 
   public chartData:number[][]=Array<number[]>(5);
+  public cicleCount=0;
 
   @ViewChild(BaseChartDirective) chart!: BaseChartDirective;
   /**El contexto, que contiene red y adaptador*/  
   @Input() droneContext?: DroneLearnContext;
   /** Cuenta de ciclos realizados. Sirve tambien para autorefresco */
-  @Input() cicleCount?:number;
+  @Input() ciclesCount?:Observable<number>;
 
 
 
@@ -27,12 +34,12 @@ export class Drone1DComponent implements AfterViewInit, OnChanges {
     datasets: [
       {
         data: [],
-        label: 'F0.5',
+        label: 'F0',
         fill: false        
       },
       {
         data: [],
-        label: 'F0.8',
+        label: 'F0.5',
         fill:false
       },
       {
@@ -42,12 +49,12 @@ export class Drone1DComponent implements AfterViewInit, OnChanges {
       },
       {
         data: [],
-        label: 'F1.2',
+        label: 'F1.5',
         fill:false
       },
       {
         data: [2,1,3],
-        label: 'F1.5',
+        label: 'F2',
         fill:false
       }
 
@@ -58,20 +65,29 @@ export class Drone1DComponent implements AfterViewInit, OnChanges {
   };
   public lineChartLegend = true;
 
+  ngOnInit(): void {
+    if(this.ciclesCount!==undefined){
+      this.ciclesCount.pipe(takeUntil(this.ngUnsubscribe)).subscribe({
+        next: (value)=>{
+          this.cicleCount=value;
+          this.updateCharFromModel();
+          this.chart.update();   
+        }
+      });
+    }
+  }
+
   ngAfterViewInit(): void {
     this.initChartData();
     this.chart.update();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if(changes['cicleCount']){
-      if(this.cicleCount=== undefined) return;
-      if((this.cicleCount-this.lastCicleCount)>5){
-        this.lastCicleCount=this.cicleCount;
-        this.updateCharFromModel();
-        this.chart.update();
-      }
-    }
+  }
+
+  ngOnDestroy(): void {
+    this.ngUnsubscribe.next();
+    this.ngUnsubscribe.complete();
   }
 
 

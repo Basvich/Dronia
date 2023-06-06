@@ -9,7 +9,8 @@ import { TDroneMesh } from '../Objects/TDroneMesh';
 import { ActionsMemory, IActionReward } from '../NetsIA/ActionsMemory';
 import * as tf from '@tensorflow/tfjs';
 import { TensorLike2D } from '@tensorflow/tfjs-core/dist/types';
-import { DroneLearnContext } from '../NetsIA/DroneLearnContext';
+import { DroneLearnContext, ICicleOptions } from '../NetsIA/DroneLearnContext';
+import { Subject } from 'rxjs';
 
 
 const Limits = {
@@ -24,6 +25,7 @@ const Limits = {
 })
 export class BasicSceneComponent {
   private lastTimestap = 0;
+  private learnCicleCount= new Subject<number>();
   drone?: TDrone3D;
   droneMesh?: TDroneMesh;
   /** Limites de la escena actual por donde se mueve el drone */
@@ -34,6 +36,9 @@ export class BasicSceneComponent {
   /** Cuenta de ciclos de aprendizaje realizados */
   ciclesCount = 0;
   bussy = false;
+  /** Probabilidad en cada paso de seleccionar un valor aleatorio */
+  exploracionFactor=0.05;
+
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
@@ -61,6 +66,11 @@ export class BasicSceneComponent {
   /** Otorga la recompensa a un dron en base a su estado puntual en un momento */
   jury: TReward | undefined;
   model1D: Model1D | undefined;
+
+  /** Informa de que se aunmento el número de ciclos de aprendizaje */
+  public LearnCicleCount$=this.learnCicleCount.asObservable();
+
+  
 
   public test1() {
     console.log('test1');
@@ -162,10 +172,12 @@ export class BasicSceneComponent {
 
     if (!this.drone) return;
     if (!this.droneLearnCtx) this.droneLearnCtx = new DroneLearnContext(this.drone);
+    const opt:ICicleOptions={explorationF:this.exploracionFactor};
     for (let i = 0; i < this.numCicles; i++) {
-      await this.droneLearnCtx.LearnCicle();
+      await this.droneLearnCtx.LearnCicle(opt);
     }
     this.ciclesCount += this.numCicles;
+    this.learnCicleCount.next(this.ciclesCount);
     this.bussy = false;
 
     //void this.droneLearnCtx.LearnDummy();

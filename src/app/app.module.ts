@@ -11,6 +11,7 @@ import { LearnGraphComponent } from './Dlg/learn-graph/learn-graph.component';
 import { Drone1DComponent } from './graph/drone1-d/drone1-d.component';
 import { NgChartsModule } from 'ng2-charts';
 import { FormsModule } from '@angular/forms';
+import { Drone1AcurrateComponent } from './graph/drone1-acurrate/drone1-acurrate.component';
 
 
 @NgModule({
@@ -19,7 +20,8 @@ import { FormsModule } from '@angular/forms';
     BasicSceneComponent,
     ThreeRenderComponent,
     LearnGraphComponent,
-    Drone1DComponent    
+    Drone1DComponent,
+    Drone1AcurrateComponent    
   ],
   imports: [
     MaterialModule,
