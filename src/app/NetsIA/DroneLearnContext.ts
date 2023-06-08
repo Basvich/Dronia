@@ -256,6 +256,7 @@ export class DroneLearnContext {
   private IsInBoundLimits(drone: TDrone3D): boolean {
     return this.sceneLimits.containsPoint(drone.Position);
   }
+  
 
   // eslint-disable-next-line class-methods-use-this
   private createDummyModel(): tf.LayersModel {

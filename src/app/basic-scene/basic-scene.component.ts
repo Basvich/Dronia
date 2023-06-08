@@ -1,4 +1,4 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild } from '@angular/core';
 import * as THREE from 'three';
 import AdapterDroneTf from '../NetsIA/AdapterDroneTf';
 import { Model1D } from '../NetsIA/ModelIA1D';
@@ -27,7 +27,8 @@ const Limits = {
   templateUrl: './basic-scene.component.html',
   styleUrls: ['./basic-scene.component.scss']
 })
-export class BasicSceneComponent {
+export class BasicSceneComponent implements OnDestroy{
+  
   private lastTimestap = 0;
   private learnCicleCount = new Subject<number>();
   /** Para poder manejar el calback de peticion de control al contexto */
@@ -79,6 +80,13 @@ export class BasicSceneComponent {
 
   /** Informa de que se aunmento el número de ciclos de aprendizaje */
   public LearnCicleCount$ = this.learnCicleCount.asObservable();
+
+  ngOnDestroy(): void {
+    if(this.miniMenuGui){
+      this.miniMenuGui.destroy();
+      this.miniMenuGui=undefined;
+    }
+  }
 
 
 

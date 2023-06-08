@@ -27,10 +27,8 @@ export default class AdapterDroneTf {
    * @returns Posicion relativa, velocidad
    */
   public getStateTensor(): tf.Tensor2D {
-    let posY = THREE.MathUtils.clamp(this.drone.Position.y - this.targetY, -20, 20);
-    posY = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
-    let velY = THREE.MathUtils.clamp(this.drone.Velocity.y, -3, 3);
-    velY = THREE.MathUtils.mapLinear(velY, -3, 3, -1, 1);
+    const posY = this.normalizePosY(this.drone.Position.y);
+    const velY = this.normalizeVely(this.drone.Velocity.y);    
     return tf.tensor2d([[posY, velY]]);
   }
 
@@ -86,10 +84,8 @@ export default class AdapterDroneTf {
     
     //Devuelve un array con vectores[y, vely]
     const arrXY = dataXY.map((value) => {
-      let posY = THREE.MathUtils.clamp(value[0] - this.targetY, -20, 20);
-      posY = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
-      let velY = THREE.MathUtils.clamp(value[1], -10, 10);
-      velY = THREE.MathUtils.mapLinear(velY, -10, 10, -1, 1);
+      const posY=this.normalizePosY(value[0]);
+      const velY=this.normalizeVely(value[1]);
       return [posY, velY];
     });
     return tf.tensor2d(arrXY);
@@ -106,5 +102,18 @@ export default class AdapterDroneTf {
       return velY;
     }); 
     return tf.tensor2d([arrPosyY, arrVelY]);*/
+  }
+
+  public normalizePosY(posY:number):number{
+    let r = THREE.MathUtils.clamp(posY - this.targetY, -20, 20);
+    r = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
+    return r;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  public normalizeVely(vely:number):number{
+    let r = THREE.MathUtils.clamp(vely, -3, 3);
+    r = THREE.MathUtils.mapLinear(r, -3, 3, -1, 1);
+    return r;
   }
 }
