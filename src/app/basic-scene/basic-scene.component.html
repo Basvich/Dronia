@@ -13,7 +13,7 @@
       <h4>controls</h4>
       <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
       <div><span>Power</span>
-        <mat-slider min="0" max="8" step="0.1" discrete>
+        <mat-slider min="0" max="20" step="0.2" discrete>
           <input matSliderThumb [(value)]="TotalForce">
         </mat-slider>
       </div>
@@ -32,7 +32,7 @@
     <div class="verticalGroup">
       <h4>tests</h4>
       <button [disabled]="true" mat-button color="secondary" (click)="viewLearningGraph()">Test adapters</button>
-      <mat-slider min="0" max="0.2" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración">
+      <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración">
         <input matSliderThumb [(value)]="exploracionFactor">
       </mat-slider>
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
@@ -45,7 +45,7 @@
     </div>
     <div>
       <app-drone1-acurrate [droneContext]="droneLearnCtx"
-        [InitialPos]="[{posY:1, velY:0},{posY:11, velY:0},{posY:5, velY:-2},{posY:7, velY:2}]"
+        [InitialPos]="[{posY:1, velY:-2},{posY:1, velY:0},{posY:5, velY:0},{posY:10, velY:0},{posY:10, velY:2}]"
         [ciclesCount]="LearnCicleCount$">
       </app-drone1-acurrate>
     </div>

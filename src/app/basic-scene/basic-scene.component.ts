@@ -3,9 +3,9 @@ import * as THREE from 'three';
 import AdapterDroneTf from '../NetsIA/AdapterDroneTf';
 import { Model1D } from '../NetsIA/ModelIA1D';
 import { TReward } from '../NetsIA/TRewards';
-import { TDrone3D } from '../Objects/Drone3D';
+import { TDrone3D, TTargetDrone } from '../Objects/Drone3D';
 import { ThreeRenderComponent } from '../three-render/three-render.component';
-import { TDroneMesh } from '../Objects/TDroneMesh';
+import { TDroneMesh, TTargetMesh } from '../Objects/TDroneMesh';
 import { ActionsMemory, IActionReward } from '../NetsIA/ActionsMemory';
 import * as tf from '@tensorflow/tfjs';
 import { TensorLike2D } from '@tensorflow/tfjs-core/dist/types';
@@ -14,6 +14,7 @@ import { Subject } from 'rxjs';
 import { MinLapseTroller } from '../Objects/utils';
 import { MatButtonToggleChange } from '@angular/material/button-toggle';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import GUI from 'lil-gui';
 
 
 const Limits = {
@@ -28,12 +29,15 @@ const Limits = {
 })
 export class BasicSceneComponent {
   private lastTimestap = 0;
-  private learnCicleCount= new Subject<number>();
+  private learnCicleCount = new Subject<number>();
   /** Para poder manejar el calback de peticion de control al contexto */
-  private minLapseAutopilot?:MinLapseTroller;
-  autoPilotOn=false;  
+  private minLapseAutopilot?: MinLapseTroller;
+  miniMenuGui?:GUI;
+  autoPilotOn = false;
   drone?: TDrone3D;
   droneMesh?: TDroneMesh;
+  targetDrone?: TTargetDrone;
+  targetMesh?: TTargetMesh;
   /** Limites de la escena actual por donde se mueve el drone */
   sceneLimits = new THREE.Box3(new THREE.Vector3(-12, 0, -12), new THREE.Vector3(12, 12, 12));
   droneLearnCtx?: DroneLearnContext;
@@ -43,7 +47,7 @@ export class BasicSceneComponent {
   ciclesCount = 0;
   bussy = false;
   /** Probabilidad en cada paso de seleccionar un valor aleatorio */
-  exploracionFactor=0.05;
+  exploracionFactor = 0.05;
 
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
@@ -74,21 +78,30 @@ export class BasicSceneComponent {
   model1D: Model1D | undefined;
 
   /** Informa de que se aunmento el número de ciclos de aprendizaje */
-  public LearnCicleCount$=this.learnCicleCount.asObservable();
+  public LearnCicleCount$ = this.learnCicleCount.asObservable();
 
-  
+
 
   public test1() {
     console.log('test1');
     if (this.drone) return;
-    const drone = new TDrone3D(2, 4, 0);
+    const drone = new TDrone3D(0, 4, 0);
 
     this.drone = drone;
     this.droneMesh = new TDroneMesh(drone);
+    
     const scene = this.render.Scene;
     if (!scene) return;
     const mesh = this.droneMesh.Mesh;
     scene.add(mesh);
+
+    if (!this.targetDrone) {
+      this.targetDrone=new TTargetDrone(6);
+      this.targetMesh = new TTargetMesh(this.targetDrone);
+      scene.add(this.targetMesh.VisualObj);
+    }
+    
+    this.createMenuLIL();
     //scene.add(drone.Arrow);
     this.render.CalbackRenderLoop = (SgElapsed: number) => this.beforeRenderFrame(SgElapsed);
   }
@@ -109,14 +122,14 @@ export class BasicSceneComponent {
 
 
   /**Cuando se activa o desactiva el  */
-  public btnAutoPilotChanged($event: MatSlideToggleChange){    
-    const {checked} = $event;
-    if(checked){
-      if(!this.minLapseAutopilot){
-        this.minLapseAutopilot=new MinLapseTroller(0.1);
+  public btnAutoPilotChanged($event: MatSlideToggleChange) {
+    const { checked } = $event;
+    if (checked) {
+      if (!this.minLapseAutopilot) {
+        this.minLapseAutopilot = new MinLapseTroller(0.1);
       }
-    }else{
-      this.minLapseAutopilot=undefined;
+    } else {
+      this.minLapseAutopilot = undefined;
     }
   }
 
@@ -130,12 +143,12 @@ export class BasicSceneComponent {
     this.lastTimestap = SgElapsed;
     if (dif > 0.1) dif = 0.1;  // Bolqueo para poder depurar    
     if (!this.drone) return;
-    this.minLapseAutopilot?.ejecute(SgElapsed, ()=>{this.droneLearnCtx?.controlDrone();});
+    this.minLapseAutopilot?.ejecute(SgElapsed, () => { this.droneLearnCtx?.controlDrone(); });
     this.drone.Simulate(SgElapsed);
-    this.droneMesh?.updateFromDrone();    
+    this.droneMesh?.updateFromDrone();
   }
 
-  
+
   /* public async testCicle() {
     if (!this.drone) return;
     if (!this.jury) {
@@ -188,12 +201,12 @@ export class BasicSceneComponent {
   public async testDroneContext() {
     if (!this.drone || this.bussy) return;
     this.bussy = true;
-    this.minLapseAutopilot=undefined;
+    this.minLapseAutopilot = undefined;
     console.clear();
 
     if (!this.drone) return;
     if (!this.droneLearnCtx) this.droneLearnCtx = new DroneLearnContext(this.drone);
-    const opt:ICicleOptions={explorationF:this.exploracionFactor};
+    const opt: ICicleOptions = { explorationF: this.exploracionFactor };
     for (let i = 0; i < this.numCicles; i++) {
       await this.droneLearnCtx.LearnCicle(opt);
     }
@@ -205,7 +218,7 @@ export class BasicSceneComponent {
   }
 
   public viewLearningGraph() {
-     console.warn('nada');
+    console.warn('nada');
   }
 
   /**
@@ -259,5 +272,34 @@ export class BasicSceneComponent {
     xs.dispose();
     ys.dispose();
     i++;
+  }
+
+  private createMenuLIL(){
+    if(this.miniMenuGui) return;
+    const gui=new GUI();
+    this.miniMenuGui = gui;    
+    if(this.drone){
+     const folderDrone=gui.addFolder( 'Drone' );
+     const folderPos=folderDrone.addFolder('Position');
+     folderPos.add(this.drone.Position, 'y').listen().decimals(2 ).disable(); 
+     const folderVel=folderDrone.addFolder('Velocity');
+     folderVel.add(this.drone.Velocity, 'y',-4,4).listen().decimals(2 ).disable(); 
+    }
+    if(this.targetDrone){
+      const folderTarget=gui.addFolder('Target');
+      folderTarget.add(this.targetDrone,'y', 1, 9, 0.5).onChange((v:number)=>{ 
+        this.setTargetPos(v);
+      });
+    }
+  }
+
+  private setTargetPos(y:number){
+    if(this.targetDrone){
+      this.targetDrone.y=y;
+      this.targetMesh?.updateFromController();
+    }
+    if(this.droneLearnCtx){
+      this.droneLearnCtx.targetY=y;
+    }
   }
 }

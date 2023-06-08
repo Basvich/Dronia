@@ -21,6 +21,8 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
   
   private ngUnsubscribe: Subject<void> = new Subject<void>();
   cicleCount=0;
+  /**Ultima media calculada */
+  lastMean=0;
 
   @Input() InitialPos?: IInitialPos[];
   /**El contexto, que contiene red y adaptador*/
@@ -79,10 +81,13 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
     if(!this.droneContext || !this.InitialPos || !this.ngChart.chart) return;
     let i=0;
     this.ngChart.chart.data.labels?.push(cicleCount);
+    let sum=0;
     for(const v of this.InitialPos){
       const r=this.droneContext.simulateCicle(v.posY, v.velY);
       this.ngChart.chart.data.datasets[i].data.push(r.mean);
+      sum+=r.mean;
       i++;
     }
+    this.lastMean=sum/this.InitialPos.length;
   }
 }

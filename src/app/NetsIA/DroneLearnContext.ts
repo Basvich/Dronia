@@ -7,7 +7,7 @@ import { TReward } from "./TRewards";
 import * as tf from '@tensorflow/tfjs';
 import { Random } from "../Objects/utils";
 
-const MaxSteps = 500;
+const MaxSteps = 100;
 
 export interface ICicleOptions {
   /** Factor de exploracion, en tre [0,1], es la probabilidad de seleccionar accion aleatoria */
@@ -26,6 +26,11 @@ export class DroneLearnContext {
   /** Limites de la escena actual por donde se mueve el drone */
   sceneLimits = new THREE.Box3(new THREE.Vector3(-10, 0, -10), new THREE.Vector3(12, 12, 12));
 
+  public set targetY(v:number){
+    this.adapter.targetY=v;
+    this.jury.targetY=v;
+  }
+
   public constructor(private drone: TDrone3D) {
     this.adapter = new AdapterDroneTf(drone);
     this.model1D.createModel2();
@@ -35,11 +40,11 @@ export class DroneLearnContext {
   public async LearnCicle(opt?: ICicleOptions) {
     const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(500);
     const rndExploracion = opt?.explorationF ?? 0.05; //por defecto Un 5% de escoger una ruta aleatoria
-    let isDone = false;
+    let isDone = 0;
     let isInside = true;
     let stepCount = 0;
     this.drone.Reset(); //Partimos de la misma posición...
-    const y0 = Random.gaussianRandom(6, 2);//Random.next(0.2, 11.8);
+    const y0 = Random.gaussianRandom(6, 5);//Random.next(0.2, 11.8);
     const vy0 = Random.gaussianRandom(0, 1);//Random.next(-3, 3);
     this.drone.Position.set(0, y0, 0);
     this.drone.Velocity.set(0, vy0, 0);
@@ -51,17 +56,17 @@ export class DroneLearnContext {
       let forcedI: number | undefined = undefined;
       if (Math.random() < rndExploracion) {
         forcedI = Math.floor(Math.random() * 5);
-      }
+      }      
       const info = this.adapter.setControlData(r, forcedI);
       //Ciclos de simulación del objeto
-      this.drone.Simulate(this.LapseSegCicle); //Simulamos en pasos de 100ms
+      //this.drone.Simulate(this.LapseSegCicle); //Simulamos en pasos de 100ms
 
       const reward = this.jury.InstanReward(this.drone);
       if (info !== undefined && (stepCount % 100 === 0 || forcedI !== undefined || (stepCount + 1 === MaxSteps))) {
-        console.log(`${stepCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}  force:${this.adapter.TotalRelativeForce(info.indexActionY)}  ${forcedI !== undefined ? 'RND' : ''}`);
+        //console.log(`${stepCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}  force:${this.adapter.TotalRelativeForce(info.indexActionY)}  ${forcedI !== undefined ? 'RND' : ''}`);
       }
       stepCount++;
-      isInside = this.IsInBoundLimits(this.drone);
+      isInside = true;  //this.IsInBoundLimits(this.drone); desactivamos los limites
       if (r && info) {
         const d: IActionReward<tf.Tensor2D, tf.Tensor2D> = {
           currentState: droneState,
@@ -78,8 +83,8 @@ export class DroneLearnContext {
     if (!isInside) {
       lastReward = this.jury.badReward;
     } else if (isDone) {
-      lastReward = this.jury.goodReward;
-    } else lastReward += this.jury.badMiniReward;
+      lastReward = isDone;
+    }
     am.finalize(lastReward);
     await this.replayAndTrain(am);
     am.dispose();
@@ -140,7 +145,7 @@ export class DroneLearnContext {
     this.drone.Reset(); //Partimos de la misma posición...
     this.drone.Position.set(0, posY, 0);
     this.drone.Velocity.set(0, velY, 0);
-    let isDone = false;
+    let isDone = 0;
     let isInside = true;
     let stepCount = 0;
     let reward = 0;
@@ -154,7 +159,7 @@ export class DroneLearnContext {
       this.drone.Simulate(this.LapseSegCicle);
       reward = this.jury.InstanReward(this.drone);
       stepCount++;
-      isInside = this.IsInBoundLimits(this.drone);
+      isInside = true; //this.IsInBoundLimits(this.drone);
       isDone = this.jury.IsDone(this.drone);
       histRewards.push(reward);
     }
@@ -162,7 +167,7 @@ export class DroneLearnContext {
     if (!isInside) {
       lastReward = this.jury.badReward;
     } else if (isDone) {
-      lastReward = this.jury.goodReward;
+      lastReward = isDone;
     } else lastReward += this.jury.badMiniReward;
     lastReward += reward;
     histRewards[histRewards.length - 1] = lastReward;
@@ -202,7 +207,7 @@ export class DroneLearnContext {
     let lastx0: number[] = [];
     let lasty0: number[] = [];
     /**Balanceo sobre la importancia de valor futuros o solo el actual ([0,1] mas alto mayor futuro) */
-    const gamma = 0.4;
+    const gamma = 0.6;
 
     batch.forEach((d) => {
       const state = d.current.currentState.dataSync();  //Un array con 2 valores float
@@ -226,7 +231,8 @@ export class DroneLearnContext {
     const ys = tf.tensor2d(y0, [y0.length, this.model1D.outputNumActions]); //Tensor con 100 (samples) * 5 valores
     //Hay que entrenar el modelo con entradas igual a los estados almacenados y como salidas deseadas correspondiente a cada entrada el array de estados
     // eslint-disable-next-line no-await-in-loop
-    const args: tf.ModelFitArgs = { epochs: 20 };
+    //2 ciclos completos, y usa en cada ciclo paquetes de batcSize para entrenar
+    const args: tf.ModelFitArgs = { epochs: 5, batchSize:64 };
     const h = await this.model1D.train(xs, ys, args);
     console.log(h);
     const tLastX0 = tf.tensor2d([lastx0]);

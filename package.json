@@ -24,6 +24,7 @@
     "@tensorflow/tfjs": "^4.2.0",
     "@types/three": "^0.149.0",
     "chart.js": "^3.6.0",
+    "lil-gui": "^0.18.1",
     "ng2-charts": "^4.1.1",
     "rxjs": "~7.8.0",
     "three": "^0.150.1",

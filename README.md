@@ -30,6 +30,8 @@ Para controlar el dron, se obtiene el array de las 5 posibles acciones, y se tom
 
 El objetivo de la red, es entonces acabar entrenando el campo recompensa de cada uno de los posibles estados.
 
+Ampliar esto en [mas información detallada](./wiki/aproximacionPrimera.md)
+
 #### Jurado para las recompensas
 
 Para valorar la recompensa asignada a un estado, se creó una clase llamada *TReward*. La forma actual para calcular la recompensa, es calcular una posición proyectada, que consiste en la posición actual, a la que se le añade la velocidad. Con esta posición proyectada, entonces se obtiene el valor recompensa de forma lineal y mayor cuanto más cerca se encuentre de la altura objetivo.

@@ -11,9 +11,9 @@ interface IDroneDimes{
   /** Dimensiones del cuerpo [x,y,z], donde z es hacia arriba */
   body:[number, number, number]
 }
-
-const g=3; 
-const cx=1.25; //Simple simplificacion de la resistencia aerodinamica devido a la velocidad
+/** VAlor de la constante g (gravitation) */
+const g=9; 
+const cx=0.5; //Simple simplificacion de la resistencia aerodinamica devido a la velocidad. Esto multiplica el cuadrado de la velocidad
 /** Simplificacion muy grande de la resistencia a la rotacion */
 const cRot=4;
 const maxVelRotorForce=28; //En ms/s (~100Km/h) la velocidad en direccion del rotor a partir de la cual ya no genera ninguna fuerza
@@ -306,4 +306,11 @@ export class TDrone3D{
   private static ToString(v:THREE.Vector3){
     return `[${v.x.toFixed(2)}, ${v.y.toFixed(2)}, ${v.z.toFixed(2)}]`;
   }
+}
+
+/**
+ * Simple controlador para el target del dron
+ */
+export class TTargetDrone{
+  constructor(public y:number){}
 }
