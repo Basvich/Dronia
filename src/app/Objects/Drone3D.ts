@@ -14,8 +14,7 @@ interface IDroneDimes{
 /** VAlor de la constante g (gravitation) */
 const g=9; 
 const cx=0.5; //Simple simplificacion de la resistencia aerodinamica devido a la velocidad. Esto multiplica el cuadrado de la velocidad
-/** Simplificacion muy grande de la resistencia a la rotacion */
-const cRot=4;
+
 const maxVelRotorForce=28; //En ms/s (~100Km/h) la velocidad en direccion del rotor a partir de la cual ya no genera ninguna fuerza
 
 
@@ -24,6 +23,7 @@ const helSepLong=0.6;
 
 const masa=1;  //en Kg 
 const pesoFuerza=masa*g;  //En N la fuerza
+const invPesoFuerza=1/pesoFuerza;
 /** Velocidad maxima angular en torno a x en la que el rotor ya no genera torque adiciona (el 0.1 es totalmente arbitrario para simplificar otros efectos)*/
 const maxAngXVelRotorForce=maxVelRotorForce/helSepWith*0.5;
 const maxAngZVelRotorForce=maxVelRotorForce/helSepLong*0.5;
@@ -48,27 +48,43 @@ export class TDrone3D{
   private lapseAcum=0;
   //private arrow! : THREE.ArrowHelper;
   //private droneMesh!:THREE.Mesh;
-  private propelers:TSpatialVector[]=[];
+  private totalMasa=masa;
+  private invPesoFuerza=1/(this.totalMasa*g);
+
   /** Vector fijo debido a la gravedad */
   private mG=new THREE.Vector3(0,-pesoFuerza,0);
+  /** Una posible carga añadida al peso del dron */
+  private _payload=0;
   /**Momento de inercia en cada uno de los ejes fijo calculado */
   private momentoInercia: THREE.Vector3;
   /* Fuerzas de los rotores en un momento cualquiera LF,RF,LB,RF */
   private propelersForce: number[]=[];
+  /**
+   * Resultante de las fuerzas de los rotores (parte lineal, sin torque)
+   */
+  private centralPropelerForce=new THREE.Vector3(0,0,0);
+  /**
+   * fuerza de resistencia debido al aire
+   */
+  private dragForce=new THREE.Vector3(0,0,0);
   /* Vector que apunta en cada momento en la direccion de los rotores */
   private rotorDir=new THREE.Vector3(0,1,0);
-  /** Resultado de la fuerza de los motores y gravedad */
+  /** 
+   * Resultado de las fuerzas aplicadas
+   * */
+  private resultForces=new THREE.Vector3(0,0,0);
+  /**
+   * Fuerza total normalizada (g=1)
+   */
+  private resultNormalizedForces=new THREE.Vector3(0,0,0);
   private resultAccel=new THREE.Vector3(0,1,0);
-  /** Para el cálculo de la fuerza de resistencia debido al desplazamiento */
-  private linealResistence=new THREE.Vector3(0,0,0);
-  private rotationalResistence=new THREE.Vector3();
+  
   /** Resultado de la fuerza angular */
   private resultTorque=new THREE.Vector3(0,1,0);
   /** Velocidad linean del CG del drone */
   private velocity=new THREE.Vector3(0,0,0);
   /** Velocidad angular en torno a los ejes del drone */
-  private wBody=new THREE.Vector3(0,0,0);
-  private rotorDir0=this.rotorDir.clone();
+  private wBody=new THREE.Vector3(0,0,0);  
   /** Fuerza total aplicada por todas las helices (Newtons) */
   private totalForce:number=pesoFuerza;
   /** 
@@ -87,7 +103,6 @@ export class TDrone3D{
   private angVel=[0,0,0];
 
    /**simples vectores precreados para evitar crearlos continuamente en el mainloop */
-   private bvelocity=new THREE.Vector3(0,0,0);
   private frontForce=1;
   private backForce=1;
 
@@ -100,6 +115,15 @@ export class TDrone3D{
   public Rotation=new THREE.Euler(0,0,0);
 
   public get Velocity(){return this.velocity;}
+  /**Fuerza neta normalizada que notaría un sensor en el dron */
+  public get NetForce(){return this.resultNormalizedForces;}
+  public set Payload(value:number){
+     value=THREE.MathUtils.clamp(value,0,1); 
+     this._payload=value;
+     this.totalMasa=masa+(value*masa);
+     this.invPesoFuerza=1/(this.totalMasa*g);
+     this.mG.set(0,-(this.totalMasa*g),0);
+  }
 
   public get RotationX(): number {return this.Rotation.x;}
   public set RotationX(v: number) {this.Rotation.x=v; }
@@ -156,22 +180,18 @@ export class TDrone3D{
  
 
   private initializeInitialForce(){
-    const peso=g*masa;
+    const peso=g*this.totalMasa;
     this.frontForce=peso/2;
     this.backForce=peso/2;
     const initialForce=new THREE.Vector3(0,this.frontForce/2,0);
-    const pos=new THREE.Vector3(helSepLong,0,-helSepWith);
-    this.propelers.push(new TSpatialVector( pos, initialForce)); //Front left
+    const pos=new THREE.Vector3(helSepLong,0,-helSepWith);    
     this.propelersForce.push(this.frontForce/2);
     pos.setZ(helSepWith);
-    this.propelers.push(new TSpatialVector( pos, initialForce)); //Front right
     this.propelersForce.push(this.frontForce/2);
     pos.setX(-helSepLong); pos.setZ(-helSepWith);
     initialForce.setY(this.backForce/2);
-    this.propelers.push(new TSpatialVector( pos, initialForce)); //Back left
     this.propelersForce.push(this.backForce/2);
     pos.setZ(helSepWith);
-    this.propelers.push(new TSpatialVector( pos, initialForce)); //Back right
     this.propelersForce.push(this.backForce/2); 
   }
 
@@ -188,10 +208,20 @@ export class TDrone3D{
     this.propelersForce[3]=forceRotor-this.pithBalance*forceRotor;
   }
 
-  private calcPhysic(){
-    //this.droneMesh.setRotationFromEuler()        
-    this.calcRotorForces();
+  private calcPhysic(){   
+    this.calcTotalForces();
     this.calcMomentForce();
+  }
+
+  /** Sumamos todas las fuerzas que se aplican */
+  private calcTotalForces(){
+    this.calcRotorForces();
+    this.calcDragForce();
+    this.resultForces.copy(this.centralPropelerForce);    
+    this.resultForces.add(this.dragForce);
+    this.resultNormalizedForces.copy(this.resultForces);
+    this.resultNormalizedForces.multiplyScalar(-this.invPesoFuerza);
+    this.resultForces.add(this.mG);
   }
 
   /** Calculo de la fuerza neta sobre el CG */
@@ -199,14 +229,26 @@ export class TDrone3D{
     //Para fuerza neta 3d, sumamos todas las fuerzas
     const modulo=this.propelersForce[0]+this.propelersForce[1]+this.propelersForce[2]+this.propelersForce[3];
     this.resultAccel.copy(this.rotorDir);
+    this.centralPropelerForce.copy(this.rotorDir);
     this.resultAccel.multiplyScalar(modulo);
+    this.centralPropelerForce.multiplyScalar(modulo);
     //Se rota lo mismo que el modulo
     this.resultAccel.applyEuler(this.Rotation);
+    this.centralPropelerForce.applyEuler(this.Rotation);
+    
+
     this.resultAccel.add(this.mG);
-    this.resultAccel.divideScalar(masa); 
+    this.resultAccel.divideScalar(this.totalMasa); 
     if(this.simStep % 128===0){      
       //console.log(`calcRotorForces() resultAc:${TDrone3D.ToString(this.resultAccel)}`);
     }
+  }
+
+  private calcDragForce(){
+    this.dragForce.copy(this.velocity);
+    TDrone3D.squaredSign(this.dragForce); 
+    this.dragForce.multiplyScalar(cx);
+    this.dragForce.negate();
   }
 
   /** Calculo del torque */
@@ -239,30 +281,22 @@ export class TDrone3D{
     }
   }
 
+  /**
+   * Con las fuerzas, se calcula el movimiento y posicion
+   * @param segs 
+   */
   private calcMovment(segs:number){   
-   //Una resistencia a la rotación, tambien simplificada mucho para que quede aparente, basicamente 
-   //Se mira cuanto se mueve, y que fuerza anula casi ese movimiento en ese intervalo
-    //this.rotationalResistence.copy(this.wBody);
-    //TDrone3D.squaredSign(this.rotationalResistence);    
-    //this.rotationalResistence.negate();
-   // this.rotationalResistence.multiplyScalar(cRot);
-
+    this.resultAccel.copy(this.resultForces); 
+    this.resultAccel.divideScalar(this.totalMasa);   
         
     //Sumamos a los valores actuales
     this.velocity.addScaledVector(this.resultAccel,segs);
     this.wBody.addScaledVector(this.resultTorque,segs);
-    //aplicamos una resistencia aerodinamica
-    this.linealResistence.copy(this.velocity);
-    TDrone3D.squaredSign(this.linealResistence);  //() this.linealResistence.multiply(this.linealResistence);  //V^2, es una simplificación de la resistencia, ya que realmente dependen de la velocidad relativa a su orientacion
-    this.linealResistence.multiplyScalar(cx);
-    this.linealResistence.negate();
-
+    
      let f=0.04;
-   if(segs<1) f=0.95; 
-   this.wBody.multiplyScalar(f);  //<----- OJO, mejorar eso, es una cutrez para simular la conservacion de momento por los rotores
-
-
-    this.velocity.addScaledVector(this.linealResistence,segs);    
+    if(segs<1) f=0.95; 
+    this.wBody.multiplyScalar(f);  //<----- OJO, mejorar eso, es una cutrez para simular la conservacion de momento por los rotores
+    
     //this.wBody.addScaledVector(this.rotationalResistence, segs);
     if(this.simStep % 128===0){
       /* const vdifRot=this.rotationalResistence.z*segs;

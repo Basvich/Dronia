@@ -39,7 +39,7 @@ export class TReward{
    */
   public IsDone(drone:TDrone3D):number{
     let res=0;
-    const limitV=0.4;
+    const limitV=0.3;
     let ok=Math.abs(drone.Position.y-this.targetY)<=0.2;
     const absV= Math.abs(drone.Velocity.y);
     ok=ok && absV<=limitV;
@@ -89,7 +89,7 @@ export class TReward{
     const posY=drone.Position.y;     
     const velY=drone.Velocity.y;   
      //Proyectamos la psocion actual junto con la velocidad
-    const futPosY=posY+ 10*velY;
+    const futPosY=posY+ 4*velY;
     const difY=futPosY- this.targetY; 
     const absDifY=Math.abs(difY);
     const yr3=this.radius/3;

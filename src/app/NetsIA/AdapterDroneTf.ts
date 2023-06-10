@@ -105,15 +105,15 @@ export default class AdapterDroneTf {
   }
 
   public normalizePosY(posY:number):number{
-    let r = THREE.MathUtils.clamp(posY - this.targetY, -20, 20);
-    r = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
+    const r = THREE.MathUtils.clamp(posY - this.targetY, -20, 20);
+    //r = THREE.MathUtils.mapLinear(posY, -20, 20, -1, 1);
     return r;
   }
 
   // eslint-disable-next-line class-methods-use-this
   public normalizeVely(vely:number):number{
-    let r = THREE.MathUtils.clamp(vely, -3, 3);
-    r = THREE.MathUtils.mapLinear(r, -3, 3, -1, 1);
+    const r = THREE.MathUtils.clamp(vely, -4, 4);
+    //r = THREE.MathUtils.mapLinear(r, -3, 3, -1, 1);
     return r;
   }
 }

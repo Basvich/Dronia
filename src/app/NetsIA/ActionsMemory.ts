@@ -20,8 +20,11 @@ export interface IActionReward<TState, TAction> {
 
 export interface IActionReplay<TState, TAction>{
    current: IActionReward<TState, TAction>;
-   next?: IActionReward<TState, TAction>;
-   nextMaxReward:number 
+   //next?: IActionReward<TState, TAction>;
+   /**El maximo valor de todas las que siguen */
+   nextMaxReward:number;
+   /**La media de recompensa de todos los que siguen */
+   nextMeanReward:number;
 }
 /**
  * Sirve para almacenar las acciones de un ciclo de simulacion (hasta que se estrella o timeout)
@@ -85,12 +88,19 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     const res : IActionReplay<TState, TAction>[]=new Array<IActionReplay<TState, TAction>>(this.data.length); 
     let next:IActionReward<TState, TAction> | undefined=undefined;
     let nextMaxReward=this.data[f].reward;
+    let nextMeanReward=this.data[f].reward;
+    let sum=0;
+    let count=0;
     //Yendo hacia atras, rellenamos el maximo en cada paso bien y el next a la vez
     for(let i=f; i>=0; i--){
-      const current=this.data[i];    
-      if(next && next.reward>nextMaxReward) nextMaxReward=next.reward;
+      const current=this.data[i];  
+
+      if(next && next.reward>nextMaxReward) nextMaxReward=next.reward;      
       //res.push({ current, next, nextMaxReward});
-      res[i]={ current, next, nextMaxReward};
+      res[i]={ current, nextMaxReward, nextMeanReward};
+      sum+=current.reward;
+      count++;
+      nextMeanReward=sum/count;      
       next=current;
     }
     return res;

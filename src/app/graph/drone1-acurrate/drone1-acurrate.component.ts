@@ -35,7 +35,13 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
   @ViewChild(BaseChartDirective) ngChart!: BaseChartDirective;
 
   public lineChartOptions: ChartOptions<'line'> = {
-    responsive: false
+    responsive: false,
+    scales:{
+      y: {
+        min: -10,
+        max: 20,
+      }
+    }
   };
   public lineChartLegend = true;
 

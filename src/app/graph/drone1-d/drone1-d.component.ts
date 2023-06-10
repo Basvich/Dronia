@@ -13,8 +13,9 @@ import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
   templateUrl: './drone1-d.component.html',
   styleUrls: ['./drone1-d.component.scss']
 })
-export class Drone1DComponent implements OnInit,  AfterViewInit, OnChanges, OnDestroy {
-  
+export class Drone1DComponent implements OnInit,  AfterViewInit, OnDestroy {
+  private minY=-2;
+  private maxY=14;
   private ngUnsubscribe: Subject<void> = new Subject<void>();
   public VelY=0.5;
 
@@ -82,9 +83,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnChanges, OnDe
     this.chart.update();
   }
 
-  ngOnChanges(changes: SimpleChanges): void {
-  }
-
+  
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
@@ -103,7 +102,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnChanges, OnDe
         data=[];
         this.chartData[i]=data;
       }
-      for(let x=0;x<=12;x+=0.5){
+      for(let x=this.minY;x<=this.maxY;x+=0.5){
         data.push(i*0.1+x);
       }
     }   
@@ -122,7 +121,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnChanges, OnDe
   private updateCharFromModel(){
     if(!this.droneContext) return;
     const dataIn:[number, number][]=[];
-    for(let posY=0; posY<=12; posY+=0.5){
+    for(let posY=this.minY; posY<=this.maxY; posY+=0.5){
       dataIn.push([posY, this.VelY]);
     }
     const predicted=this.droneContext.predictValues(dataIn);
