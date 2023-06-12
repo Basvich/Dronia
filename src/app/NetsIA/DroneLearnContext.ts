@@ -58,7 +58,7 @@ export class DroneLearnContext {
       }
     }
     if(y0===undefined) y0= Random.gaussianRandom(6, 5);//Random.next(0.2, 11.8);
-    if(vy0===undefined) vy0 = Random.gaussianRandom(0, 1);
+    if(vy0===undefined) vy0 = Random.gaussianRandom(0, 2);
 
     this.drone.Position.set(0, y0, 0);
     this.drone.Velocity.set(0, vy0, 0);

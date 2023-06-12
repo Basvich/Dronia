@@ -17,7 +17,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnDestroy {
   private minY=-2;
   private maxY=14;
   private ngUnsubscribe: Subject<void> = new Subject<void>();
-  public VelY=0.5;
+  public VelY=0;
 
   public chartData:number[][]=Array<number[]>(5);
   public cicleCount=0;

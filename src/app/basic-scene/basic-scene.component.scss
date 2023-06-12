@@ -22,11 +22,19 @@
 .controlsGroup{
     display: flex;
     flex-direction: row;
+    gap:12px;
 }
 
 .verticalGroup{
     display: flex;
     flex-direction: column;
+}
+
+.horizontalGroup{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap:4px;
 }
 
 mat-slider {

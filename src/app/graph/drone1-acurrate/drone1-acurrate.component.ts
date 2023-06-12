@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Input, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, Input, OnInit, ViewChild, inject } from '@angular/core';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
@@ -17,9 +17,9 @@ interface IInitialPos {
   templateUrl: './drone1-acurrate.component.html',
   styleUrls: ['./drone1-acurrate.component.scss']
 })
-export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy {
-  
-  private ngUnsubscribe: Subject<void> = new Subject<void>();
+export class Drone1AcurrateComponent implements OnInit, AfterViewInit {  
+  destroyRef = inject(DestroyRef);
+  private destroyed: Subject<void> = new Subject<void>();
   cicleCount=0;
   /**Ultima media calculada */
   lastMean=0;
@@ -33,6 +33,13 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
 
 
   @ViewChild(BaseChartDirective) ngChart!: BaseChartDirective;
+
+  constructor(){    
+    this.destroyRef.onDestroy(() => {
+      this.destroyed.next();
+      this.destroyed.complete();
+    });   
+  }
 
   public lineChartOptions: ChartOptions<'line'> = {
     responsive: false,
@@ -48,8 +55,8 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
 
   ngOnInit(): void {
     if(this.ciclesCount!==undefined){
-      this.ciclesCount.pipe(takeUntil(this.ngUnsubscribe)).subscribe({
-        next: (value)=>{
+      this.ciclesCount.pipe(takeUntil(this.destroyed)).subscribe({
+        next: (value:number)=>{
           this.cicleCount=value;
           this.updateCharFromModel(value);
           this.ngChart.update();   
@@ -60,11 +67,6 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
 
   ngAfterViewInit(): void {
     this.initChartOptions();
-  }
-
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
   }
 
   private initChartOptions() {
@@ -97,3 +99,7 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit, OnDestroy
     this.lastMean=sum/this.InitialPos.length;
   }
 }
+function takeUntilDestroyed(): import("rxjs").OperatorFunction<number, unknown> {
+  throw new Error('Function not implemented.');
+}
+
