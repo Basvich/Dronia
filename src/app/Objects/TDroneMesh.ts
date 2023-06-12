@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { TDrone3D } from "./Drone3D";
+import { TDrone3D, TTargetDrone } from "./Drone3D";
 
 const lpanelMaterial=new THREE.MeshLambertMaterial({color: 0x2233FF});
 
@@ -91,4 +91,31 @@ export class TDroneMesh {
     body.castShadow = true;
     return body;
   }
+}
+
+
+/**
+ * Simple wrapper para el pintado 3D del target
+ */
+export class TTargetMesh{
+  private wireframe!: THREE.LineSegments<THREE.EdgesGeometry<THREE.BoxGeometry>, THREE.LineBasicMaterial>;
+
+  public get VisualObj(){ return this.wireframe;}  
+
+  public constructor(public target: TTargetDrone) {
+    this.createMesh();
+  }
+
+  public updateFromController(){
+    this.wireframe.position.setY(this.target.y);
+  }
+
+  private createMesh() {
+    const boxGeometry = new THREE.BoxGeometry(1,0.4, 1);
+    const geo = new THREE.EdgesGeometry( boxGeometry ); // or WireframeGeometry( geometry )
+    const mat = new THREE.LineBasicMaterial( { color: 0x34ebe1, linewidth: 2 } );
+    this.wireframe = new THREE.LineSegments( geo, mat );
+    this.wireframe.position.y=this.target.y;    
+  }
+
 }

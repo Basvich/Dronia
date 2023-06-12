@@ -1,0 +1,10 @@
+<div>
+  <canvas baseChart width="400" height="200"
+    [type]="'line'"    
+    [options]="lineChartOptions"    
+    [legend]="lineChartLegend"
+    [data]="lineChartData"
+    >
+  </canvas>
+  <div><span>Vel inicial:</span><input matInput type="number"  placeholder="Vel Y" min="-3" max="3" step="0.5" [(ngModel)]="VelY"  (change)="changedVel()"></div>
+</div>

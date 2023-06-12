@@ -1,8 +1,8 @@
 <div class="container">
   <div class="options">
-    <button mat-button color="primary" (click)="test1()">Create drone</button>
+    <button mat-button color="primary" (click)="test1()" matTooltip="Crear el drone y contexto">Create drone</button>
   </div>
-  <div class="trheeScene">    
+  <div class="trheeScene">
     <app-three-render></app-three-render>
     <!-- <div class="mockRender">
       <span>dummy</span>
@@ -12,27 +12,45 @@
     <div class="verticalGroup">
       <h4>controls</h4>
       <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
-      <div><span>Power</span>
-        <mat-slider  min="0" max="20" step="0.05" discrete>
+      <div class="horizontalGroup"><span>Power</span>
+        <mat-slider min="0" max="20" step="0.2" discrete>
           <input matSliderThumb [(value)]="TotalForce">
         </mat-slider>
       </div>
-      <div><span>Pitch</span>
-        <mat-slider  min="-1" max="1" step="0.1" discrete>
-        <input matSliderThumb [(value)]="PitchBalance">
-      </mat-slider>
-    </div>
-      <div><span>Roll</span>
-        <mat-slider  min="-3" max="3" step="0.1" discrete disabled="false">
-          <input matSliderThumb >
+      <div class="horizontalGroup"><span>Pitch</span>
+        <mat-slider min="-1" max="1" step="0.1" discrete>
+          <input matSliderThumb [(value)]="PitchBalance">
         </mat-slider>
       </div>
+      <div class="horizontalGroup"><span>Roll</span>
+        <mat-slider min="-3" max="3" step="0.1" discrete disabled="false">
+          <input matSliderThumb>
+        </mat-slider>
+      </div>     
+      <mat-slide-toggle [disabled]="!droneLearnCtx" [checked]="autoPilotOn" (change)="btnAutoPilotChanged($event)">Autopilot</mat-slide-toggle>
     </div>
     <div class="verticalGroup">
       <h4>tests</h4>
-      <button mat-button color="secondary" (click)="testCicle()">Test adapters</button>
-        <button mat-flat-button color="primary" (click)="testDroneContext()">Test DroneLearn</button>
-        <button mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
-    </div>   
+      <button [disabled]="true" mat-button color="secondary" (click)="viewLearningGraph()">Test adapters</button>
+      <div>
+      <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración. (0.1 => 10%)">
+        <input matSliderThumb [(value)]="exploracionFactor">
+      </mat-slider>
+      <mat-slide-toggle [(ngModel)]="prefixInitials" (change)="handlePrefixInitials()" matTooltip="Si usa posiciones iniciales prefijadas frente a aleatorias">Prefixed initials</mat-slide-toggle>
+      </div>
+      <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
+        matTooltip="Cuantos ciclos realiza">
+      <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneContext()" matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
+      <button mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
+    </div>
+    <div>
+      <app-drone1-d [droneContext]="droneLearnCtx" [ciclesCount]="LearnCicleCount$"></app-drone1-d>
+    </div>
+    <div>
+      <app-drone1-acurrate [droneContext]="droneLearnCtx"
+        [InitialPos]="[{posY:1, velY:-2},{posY:1, velY:0},{posY:5, velY:0},{posY:10, velY:0},{posY:10, velY:2}]"
+        [ciclesCount]="LearnCicleCount$">
+      </app-drone1-acurrate>
+    </div>
   </div>
 </div>

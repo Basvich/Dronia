@@ -13,3 +13,19 @@ export class Random {
     return z * stdev + mean;
   }
 }
+
+export class MinLapseTroller{
+  totalElapsedSg=0;
+  public constructor(private minElapsedSg:number){
+  }
+
+  public ejecute(elapsedSg:number,callback: () => void){
+    const t=this.totalElapsedSg+elapsedSg;
+    if(t>=this.minElapsedSg){
+      this.totalElapsedSg=0;
+      callback();      
+    }else{
+      this.totalElapsedSg=t;
+    }    
+  }
+}

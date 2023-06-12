@@ -20,6 +20,7 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
   private terrainMesh?: THREE.Mesh;
   private clock = new THREE.Clock();
   //private earthMesh?: THREE.Object3D;
+  public dummy={pos:1, vel:2};
 
   private get canvas(): HTMLCanvasElement {
     return this.canvasRef.nativeElement;
@@ -167,7 +168,6 @@ export class ThreeRenderComponent implements AfterViewInit, OnDestroy {
     //X: red, Y: Green, Z:Blue
     const axesHelper = new THREE.AxesHelper( 5 );
     this.scene.add( axesHelper );
-
   }
 
   private createFloor3D() {

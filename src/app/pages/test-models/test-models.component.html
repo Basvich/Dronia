@@ -1,0 +1,8 @@
+<div class="container">
+  <div>
+    <button mat-button color="primary" (click)="handleCreateModel()">create model</button>
+    <button [disabled]="!model" mat-button color="primary" (click)="handleTrainModel()">train model</button>
+    <button [disabled]="!model" mat-button color="primary" (click)="handleTestModel()">test model</button>
+  </div>
+  <div></div>
+</div>
