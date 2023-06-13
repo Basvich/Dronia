@@ -1,4 +1,3 @@
-import { abs, math } from "@tensorflow/tfjs";
 import { TDrone3D } from "../Objects/Drone3D";
 
 
@@ -46,6 +45,11 @@ export class TReward{
     if(ok){ //Damos un premio proporcional a lo cerca que queda
       const rv=this.goodReward-(this.goodReward/limitV)*absV;
       res=rv;
+      //Y otro si la aceleración está cerca de 1 (parado)
+      const accelY=Math.abs(drone.NetForce.y+1);
+      if(accelY<0.2){
+        res=res+((0.2-accelY)/0.2)*this.goodReward/2;
+      }
     }
     return res;
   }

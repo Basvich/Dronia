@@ -13,6 +13,7 @@ import { NgChartsModule } from 'ng2-charts';
 import { FormsModule } from '@angular/forms';
 import { Drone1AcurrateComponent } from './graph/drone1-acurrate/drone1-acurrate.component';
 import { TestModelsComponent } from './pages/test-models/test-models.component';
+import { BasicScene2Component } from './pages/basic-scene2/basic-scene2.component';
 
 
 @NgModule({
@@ -23,7 +24,8 @@ import { TestModelsComponent } from './pages/test-models/test-models.component';
     LearnGraphComponent,
     Drone1DComponent,
     Drone1AcurrateComponent,
-    TestModelsComponent    
+    TestModelsComponent,
+    BasicScene2Component    
   ],
   imports: [
     MaterialModule,
