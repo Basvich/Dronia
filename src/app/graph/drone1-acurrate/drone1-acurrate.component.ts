@@ -29,7 +29,7 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit {
   @Input() droneContext?: DroneLearnContext;
 
   /** Cuenta de ciclos realizados. Sirve tambien para autorefresco */
-  @Input() ciclesCount?:Observable<number>;
+  @Input() ciclesCount?:Observable<{count:number, lost:number}>;
 
 
   @ViewChild(BaseChartDirective) ngChart!: BaseChartDirective;
@@ -46,9 +46,19 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit {
     scales:{
       y: {
         min: -10,
-        max: 20,
+        max: 20,    
+        title:{
+          display:true,
+          text:"Recompensa"
+        }  
+      },
+      x:{
+        title:{
+          display:true,
+          text:"Ciclos"
+        }
       }
-    }
+    },    
   };
   public lineChartLegend = true;
 
@@ -56,9 +66,9 @@ export class Drone1AcurrateComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     if(this.ciclesCount!==undefined){
       this.ciclesCount.pipe(takeUntil(this.destroyed)).subscribe({
-        next: (value:number)=>{
-          this.cicleCount=value;
-          this.updateCharFromModel(value);
+        next: (value:{count:number, lost:number})=>{
+          this.cicleCount=value.count;
+          this.updateCharFromModel(value.count);
           this.ngChart.update();   
         }
       });

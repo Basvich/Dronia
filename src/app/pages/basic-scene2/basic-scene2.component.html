@@ -1,7 +1,4 @@
 <div class="container">
-  <div class="options">
-    <button mat-button color="primary" (click)="createObjectsDrone()" matTooltip="Crear el drone y contexto">Create drone</button>
-  </div>
   <div class="trheeScene">
     <app-three-render></app-three-render>
     <!-- <div class="mockRender">
@@ -30,8 +27,7 @@
       <mat-slide-toggle [disabled]="!droneLearnCtx" [checked]="autoPilotOn" (change)="btnAutoPilotChanged($event)">Autopilot</mat-slide-toggle>
     </div>
     <div class="verticalGroup">
-      <h4>tests</h4>
-      <button [disabled]="true" mat-button color="secondary" (click)="viewLearningGraph()">Test adapters</button>
+      <h4>tests</h4>      
       <div>
       <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración. (0.1 => 10%)">
         <input matSliderThumb [(value)]="exploracionFactor">
@@ -41,10 +37,7 @@
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
         matTooltip="Cuantos ciclos realiza">
       <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneLearnContext()" matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
-      <button mat-button color="secondary" (click)="viewLearningGraph()">view Learning graph</button>
-    </div>
-    <div>
-      <app-drone1-d [droneContext]="droneLearnCtx" [ciclesCount]="LearnCicleCount$"></app-drone1-d>
+      
     </div>
     <div>
       <app-drone1-acurrate [droneContext]="droneLearnCtx"

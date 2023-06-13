@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { TDrone3D } from "../Objects/Drone3D";
 import { ActionsMemory, IActionReward } from "./ActionsMemory";
-import AdapterDroneTf from "./AdapterDroneTf";
-import { Model1D } from "./ModelIA1D";
+import AdapterDroneTf, { IAdapterDroneTf } from "./AdapterDroneTf";
+import { Model1D, NeuronalDronModel } from "./ModelIA1D";
 import { TReward } from "./TRewards";
 import * as tf from '@tensorflow/tfjs';
 import { Random } from "../Objects/utils";
@@ -19,11 +19,11 @@ export interface ICicleOptions {
 export class DroneLearnContext {
   /** El tiempo prefijado de cada salto de simulación */
   private LapseSegCicle=0.1;
-  private adapter: AdapterDroneTf;
+  private adapter: IAdapterDroneTf;// AdapterDroneTf;
   private jury = new TReward();
   private modelDummy: tf.LayersModel;
-  /** La red que aprende */
-  private model1D = new Model1D();
+  private rnModel:NeuronalDronModel; 
+  
   /** Limites de la escena actual por donde se mueve el drone */
   sceneLimits = new THREE.Box3(new THREE.Vector3(-20, -20, -20), new THREE.Vector3(20, 20, 20));
   /** Minima recompensa que nos saca */
@@ -34,9 +34,9 @@ export class DroneLearnContext {
     this.jury.targetY=v;
   }
 
-  public constructor(private drone: TDrone3D) {
-    this.adapter = new AdapterDroneTf(drone);
-    this.model1D.createModel2();
+  public constructor(private drone: TDrone3D, factoryRN: ()=> NeuronalDronModel, factoryAdapter: ()=>IAdapterDroneTf ) {
+    this.rnModel=factoryRN();
+    this.adapter = factoryAdapter();//new AdapterDroneTf(drone);    
     this.modelDummy = this.createDummyModel();
   }
 
@@ -65,11 +65,11 @@ export class DroneLearnContext {
 
     while (stepCount < MaxSteps  && isInside) {
       const droneState = this.adapter.getStateTensor();
-      const r = this.model1D.predict(droneState);
+      const r = this.rnModel.predict(droneState);
       //console.log(r);
       let forcedI: number | undefined = undefined;
       if (Math.random() < rndExploracion) {
-        forcedI = Math.floor(Math.random() * 5);
+        forcedI = Math.floor(Math.random() * this.rnModel.outputNumActions);
       }      
       const info = this.adapter.setControlData(r, forcedI);
       //Ciclos de simulación del objeto
@@ -138,7 +138,7 @@ export class DroneLearnContext {
   public predictValues(samples: [number, number][]): number[][] {
     const res = [];
     const states = this.adapter.getMappedTensor(samples);
-    const r = this.model1D.predict(states);
+    const r = this.rnModel.predict(states);
     states.dispose();
     if (r) {
       const tensorData = r.dataSync();
@@ -166,7 +166,7 @@ export class DroneLearnContext {
     const histRewards = [];
     while (stepCount < MaxSteps && !isDone && isInside) {
       const droneState = this.adapter.getStateTensor();
-      const r = this.model1D.predict(droneState);
+      const r = this.rnModel.predict(droneState);
       droneState.dispose();
       this.adapter.setControlData(r);
       r?.dispose();
@@ -195,10 +195,16 @@ export class DroneLearnContext {
    */
   public controlDrone(){
     const droneState = this.adapter.getStateTensor();
-    const r = this.model1D.predict(droneState);
+    const r = this.rnModel.predict(droneState);
     this.adapter.setControlData(r);
     r?.dispose();
     droneState.dispose();
+  }
+
+  public Dispose(){
+    if(this.rnModel){
+      this.rnModel.dispose();      
+    }
   }
 
   dummyPredict(states: tf.Tensor | tf.Tensor[]): tf.Tensor2D | undefined {
@@ -241,8 +247,8 @@ export class DroneLearnContext {
       lasty0 = Array.from(currentQ);
       y0.push(lasty0);
     });
-    const xs = tf.tensor2d(x0, [x0.length, this.model1D.inputNumStates]); //Tensor con 100 (samples) * 2 valores
-    const ys = tf.tensor2d(y0, [y0.length, this.model1D.outputNumActions]); //Tensor con 100 (samples) * 5 valores
+    const xs = tf.tensor2d(x0, [x0.length, this.rnModel.inputNumStates]); //Tensor con 100 (samples) * 2 valores
+    const ys = tf.tensor2d(y0, [y0.length, this.rnModel.outputNumActions]); //Tensor con 100 (samples) * 5 valores
     //Hay que entrenar el modelo con entradas igual a los estados almacenados y como salidas deseadas correspondiente a cada entrada el array de estados
     // eslint-disable-next-line no-await-in-loop
     const printCallback = {
@@ -251,10 +257,10 @@ export class DroneLearnContext {
       },
     };
     const args: tf.ModelFitArgs = { epochs: 30, batchSize:64, callbacks:printCallback };
-    const h = await this.model1D.train(xs, ys, args);
+    const h = await this.rnModel.train(xs, ys, args);
     console.log(h);
     const tLastX0 = tf.tensor2d([lastx0]);
-    const tPredicted = this.model1D.predict(tLastX0);
+    const tPredicted = this.rnModel.predict(tLastX0);
     const predicted = tPredicted?.dataSync();
     tLastX0.dispose();
     tPredicted?.dispose();

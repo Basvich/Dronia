@@ -16,7 +16,7 @@ El objetivo principal de este proyecto es probar el aprendizaje reforzado en un 
 ## Ejemplos
 
 
-![Alt text](pantallazo1.png)
+![Alt text](wiki/media/pantallazo1.png)
 
 ### Entrenamiento simple en 1D
 
@@ -30,6 +30,12 @@ Para controlar el dron, se obtiene el array de las 5 posibles acciones, y se tom
 El objetivo de la red, es entonces acabar entrenando el campo recompensa de cada uno de los posibles estados.
 
 Ampliar esto en [mas información detallada](./wiki/aproximacionPrimera.md)
+
+### Entrenamiento simple en 1D version 2
+
+Este caso es una variación del simple, pero en vez de manejar fuerzas deseadas, lo que se maneja es la variación de fuerzas, o sea el control básicamente indica si queremos más o menos fuerza aplicada. Entre las variables de entrada también se incluye la fuerza sentida por el dron (cuando está en reposo, sería de 1 apuntando hacia abajo)
+
+Ampliar esto en [mas información detallada](./wiki/aproximacionPrimeraB.md)
 
 #### Jurado para las recompensas
 

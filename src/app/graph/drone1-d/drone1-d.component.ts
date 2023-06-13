@@ -26,7 +26,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnDestroy {
   /**El contexto, que contiene red y adaptador*/  
   @Input() droneContext?: DroneLearnContext;
   /** Cuenta de ciclos realizados. Sirve tambien para autorefresco */
-  @Input() ciclesCount?:Observable<number>;
+  @Input() ciclesCount?:Observable<{count:number, lost:number}>;
 
 
 
@@ -70,7 +70,7 @@ export class Drone1DComponent implements OnInit,  AfterViewInit, OnDestroy {
     if(this.ciclesCount!==undefined){
       this.ciclesCount.pipe(takeUntil(this.ngUnsubscribe)).subscribe({
         next: (value)=>{
-          this.cicleCount=value;
+          this.cicleCount=value.count;
           this.updateCharFromModel();
           this.chart.update();   
         }

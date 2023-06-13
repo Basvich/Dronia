@@ -10,6 +10,7 @@ import { Subject } from 'rxjs';
 import { MinLapseTroller } from '../Objects/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import GUI from 'lil-gui';
+import { BasicSceneBase } from '../pages/basicSceneBase';
 
 
 const Limits = {
@@ -22,35 +23,9 @@ const Limits = {
   templateUrl: './basic-scene.component.html',
   styleUrls: ['./basic-scene.component.scss']
 })
-export class BasicSceneComponent implements OnDestroy{
-  
-  private lastTimestap = 0;
-  private learnCicleCount = new Subject<number>();
-  /** Para poder manejar el calback de peticion de control al contexto */
-  private minLapseAutopilot?: MinLapseTroller;
-  miniMenuGui?:GUI;
-  autoPilotOn = false;
-  prefixInitials=false;
-  initialsPosIterator?: Iterator<{posY:number, velY:number}>;
-  drone?: TDrone3D;
-  droneMesh?: TDroneMesh;
-  targetDrone?: TTargetDrone;
-  payload=0;
-
-  private fixedInitialPos?: Array<{posY:number, velY:number}>;
-  
-  targetMesh?: TTargetMesh;
-  /** Limites de la escena actual por donde se mueve el drone */
-  sceneLimits = new THREE.Box3(new THREE.Vector3(-12, 0, -12), new THREE.Vector3(12, 12, 12));
-  droneLearnCtx?: DroneLearnContext;
-  /** Numero de ciclos de aprendizaje con cada click */
-  numCicles = 1;
-  /** Cuenta de ciclos de aprendizaje realizados */
-  ciclesCount = 0;
-  bussy = false;
-  /** Probabilidad en cada paso de seleccionar un valor aleatorio */
-  exploracionFactor = 0.05;
-
+export class BasicSceneComponent  extends BasicSceneBase  implements OnDestroy {  
+  private lastTimestap = 0;  
+  payload=0; 
 
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
@@ -68,12 +43,7 @@ export class BasicSceneComponent implements OnDestroy{
   public set RotZ(v: number) {
     if (!this.drone) return;
     this.drone.RotationZ = v;
-  }
-
-  public get TotalForce(): number { return this.drone?.TotalForce ?? 0; }
-  public set TotalForce(v: number) { if (this.drone) this.drone.TotalForce = v; }
-  public get PitchBalance(): number { return this.drone?.PithBalance ?? 0; }
-  public set PitchBalance(v: number) { if (this.drone) this.drone.PithBalance = v; }
+  }  
 
   /** Otorga la recompensa a un dron en base a su estado puntual en un momento */
   jury: TReward | undefined;
@@ -83,16 +53,17 @@ export class BasicSceneComponent implements OnDestroy{
   public LearnCicleCount$ = this.learnCicleCount.asObservable();
 
   ngOnDestroy(): void {
+    this.dispose();
     if(this.miniMenuGui){
       this.miniMenuGui.destroy();
       this.miniMenuGui=undefined;
-    }
+    }        
   }
 
 
 
-  public test1() {
-    console.log('test1');
+  public createObjectsDrone() {
+    console.log('createObjectsDrone()');
     if (this.drone) return;
     const drone = new TDrone3D(0, 4, 0);
 
@@ -123,11 +94,7 @@ export class BasicSceneComponent implements OnDestroy{
     v1b.copy(v1);
     const v2 = v1b.applyEuler(euler);
     console.log(`v1:${BasicSceneComponent.V3ToString(v1)}  v2:${BasicSceneComponent.V3ToString(v2)}`);
-  }
-
-  public resetDrone() {
-    this.drone?.Reset();
-  }
+  } 
 
 
   /**Cuando se activa o desactiva el  */
@@ -207,56 +174,13 @@ export class BasicSceneComponent implements OnDestroy{
     am.dispose();
   } */
 
-  public async testDroneContext() {
-    if (!this.drone || this.bussy) return;
-    this.bussy = true;
-    this.minLapseAutopilot = undefined;
-    console.clear();
-
-    if (!this.drone) return;
-    if (!this.droneLearnCtx) this.droneLearnCtx = new DroneLearnContext(this.drone);   
-    const opt: ICicleOptions = { 
-      explorationF: this.exploracionFactor,
-      initialsPos: this.initialsPosIterator
-     };
-    for (let i = 0; i < this.numCicles; i++) {
-      console.clear();
-      await this.droneLearnCtx.LearnCicle(opt);      
-    }
-    this.ciclesCount += this.numCicles;
-    this.learnCicleCount.next(this.ciclesCount);
-    this.bussy = false;
-
-    //void this.droneLearnCtx.LearnDummy();
-  }
+ 
 
   public viewLearningGraph() {
     console.warn('nada');
   }
 
-  public handlePrefixInitials(){
-    if(this.prefixInitials){
-      this.initialsPosIterator=this.PrefixedInitials();
-    }else{
-      this.initialsPosIterator=undefined;
-    }     
-  }
-
-  public *PrefixedInitials(): Generator<{ posY: number; velY: number; }, void, unknown>{
-    if(!this.fixedInitialPos){
-      this.fixedInitialPos=[];
-      for(let posY=0; posY<=10; posY+=0.5){ //24 por m
-        for(let velY=-3; velY<=3; velY+=0.5){ //12 por vel
-          this.fixedInitialPos?.push({posY,velY});
-        }
-      }
-    }
-    while(true){
-      for(let i=0; i< this.fixedInitialPos?.length; i++){
-        yield this.fixedInitialPos[i];
-      }
-    }
-  }
+  
 
   /**
    * Devuelve true si está en la escena

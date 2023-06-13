@@ -45,7 +45,7 @@ Como estamos reproduciendo las recompensas esperadas, entonces en un estado cual
 
 
 
-<img align="left" src="media/graph_1_a.png" alt="Velocidad 0">
+<img  src="media/graph_1_a.png" alt="Velocidad 0">
 
 En esta gráfica (tomada después de unos 60 ciclos de entrenamiento), podemos ver que acción tomará el dron según su altura y velocidad inicial 0.
 * Si lo posicionamos en la posición 1, vemos que la gráfica que está por arriba es F2 (el doble de fuerza que el peso, lo que hace que suba), la cual da una recompensa esperada sobre 5. 
@@ -53,7 +53,7 @@ En esta gráfica (tomada después de unos 60 ciclos de entrenamiento), podemos v
 
 ---
 
-<img align="left" src="media/graph_1_b.png" alt="Velocidad -a">
+<img  src="media/graph_1_b.png" alt="Velocidad -a">
 En está otra gráfica, la velocidad inicial es -1 (hacia abajo).
 * Hasta la altura 9, se ve que la acción preferida es usar la potencia 2. Lo que hace que si está por arriba del 6, vaya frenando, y por debajo directamente suba.
 * En posiciones un poco mas altas, la fuerza es 1.5, que viene a ser _frenar pero no tanto_.
@@ -61,7 +61,17 @@ En está otra gráfica, la velocidad inicial es -1 (hacia abajo).
 ---
 
 
-<img align="left" src="media/graph_1_c.png" alt="Velocidad 0.5">
+<img  src="media/graph_1_c.png" alt="Velocidad 0.5">
 Con una ligera velocidad positiva de 0.5, la acción preferida es directamente tener poca potencia: F0.5, lo que hace que el dron tienda a bajar.
 
 Finalmente cuando se está probando la simulación, lo que ocurre es que el dron va cambiando de estado (equivalente a cambiar en cada momento de gráfica), y lo que ocurre es que va saltando constantemente entre una potencia seleccionada y otra, lo que hace que acabe posicionado en el entorno de la altura deseada de 6.
+
+---
+
+### Otras pruebas para probar el resultado.
+
+Cuando se está simulando el modelo, se puede añadir una carga adicional (payload), la cual se suma a la masa del dron. Hay que tener en cuenta que en ningun momento esta masa adicional forma parte del entrenamiento, y se usa para ver que ocurre con un modelo entrenado.
+
+Lo que ocurre al añadir una masa es que la posición de equilibrio del dron, en vez de estar en el entorno de la altura deseada, esta se situa por debajo. Esto es coherente si pensamos en que realmente con este modelo es como si un operador aprende a volar un dron memorizando que posiciones del control de potencia hay que usar en cada situación. O sea que si está en tal posición y velocidad, pues se mueve hasta tal posición. Si esta por debajo, sabe que tiene que poner tal potencia, pero si esa potencia no es superior que la necesaria para compensar la masa adicional, pues simplemente no subirá. Una operador normal, lo que haría sería simplemente aumentar algo más la potencia para subir.
+
+

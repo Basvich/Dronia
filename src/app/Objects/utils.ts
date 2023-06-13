@@ -1,4 +1,9 @@
 
+/** Si la clase necesita que se llame a dispose obligatoriamente */
+export interface IDisposable{
+  /* función a llamar (manualmente....) */
+  dispose: ()=>void;
+}
 
 export class Random {
   public static next(min: number, max: number) {
