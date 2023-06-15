@@ -1,9 +1,6 @@
 <div class="container">
   <div class="trheeScene">
     <app-three-render></app-three-render>
-    <!-- <div class="mockRender">
-      <span>dummy</span>
-    </div> -->
   </div>
   <div class="controlsGroup">
     <div class="verticalGroup">
@@ -37,13 +34,7 @@
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
         matTooltip="Cuantos ciclos realiza">
       <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneLearnContext()" matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
-      <button mat-flat-button color="secondary" matTooltip="Experimental guardar estado" (click)="saveModel()">Save</button>
-    </div>
-    <div>
-      <app-drone1-acurrate [droneContext]="droneLearnCtx"
-        [InitialPos]="[{posY:1, velY:-2},{posY:1, velY:0},{posY:5, velY:0},{posY:10, velY:0},{posY:10, velY:2}]"
-        [ciclesCount]="LearnCicleCount$">
-      </app-drone1-acurrate>
+      <button [disabled]="true" mat-flat-button color="secondary" matTooltip="Experimental guardar estado" >Save</button>
     </div>
   </div>
 </div>

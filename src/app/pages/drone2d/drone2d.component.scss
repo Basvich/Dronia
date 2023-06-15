@@ -1,0 +1,50 @@
+.container{    
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* border: 2px;
+  border-color: teal;
+  border-style: double; */
+}
+
+
+.options{
+  flex-grow: 0;
+  flex-shrink: 0;
+}
+
+.trheeScene{    
+  flex-grow: 1;    
+  /* border: 1px;
+  border-color: red;
+  border-style: dashed; */
+}
+
+.controlsGroup{
+  display: flex;
+  flex-direction: row;
+  gap:12px;
+}
+
+.verticalGroup{
+  display: flex;
+  flex-direction: column;
+}
+
+.horizontalGroup{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap:4px;
+}
+
+mat-slider {
+  width: 200px;
+}
+
+.mockRender{
+  flex-grow: 1;
+  border: 2px;
+  border-color: crimson;
+  border-style: double;    
+}

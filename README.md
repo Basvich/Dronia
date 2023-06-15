@@ -37,6 +37,10 @@ Este caso es una variación del simple, pero en vez de manejar fuerzas deseadas,
 
 Ampliar esto en [mas información detallada](./wiki/aproximacionPrimeraB.md)
 
+### Entrenamiento con movimiento en 2D
+
+
+
 #### Jurado para las recompensas
 
 Para valorar la recompensa asignada a un estado, se creó una clase llamada *TReward*. La forma actual para calcular la recompensa, es calcular una posición proyectada, que consiste en la posición actual, a la que se le añade la velocidad. Con esta posición proyectada, entonces se obtiene el valor recompensa de forma lineal y mayor cuanto más cerca se encuentre de la altura objetivo.
@@ -48,6 +52,13 @@ Es muy importante que los estados iniciales del dron, sean aleatorios tanto en p
 La red converge bastante rápidamente hacia el estado que considera mejor, el cual es mantener una fuerza neutra en el dron. Esto se ve en que en los datos obtenidos por la red, se nota la recompensa para el estado neutro, con bastante mas valor que las demás.
 
 Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente quieto, casi sin tendencia a acercase a la altura objetivo, al ir realizando más entrenamientos, se nota como esperado que las recompensas de los demás estados van creciendo también, pero ese proceso es tremendamente largo hasta que el dron aprenda a moverse de esas posiciones de estabilidad hacia la posición deseada.
+
+# Ruta
+
+* Entrenar la red para movimiento en 3D en el espacio
+* Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
+* Añadir otra red que permita al dron indicar cual es a su vez el target deseado, por ejemplo para poder "planificar" rutas o evitar obstaculos.
+
 
 
 # Readme por defecto

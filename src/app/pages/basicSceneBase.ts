@@ -9,7 +9,7 @@ import { Model1D } from "../NetsIA/ModelIA1D";
 import AdapterDroneTf from "../NetsIA/AdapterDroneTf";
 
 
-/** Clase base para unas páginas casi iguales, donde metemos las cosas comunes */
+/** Clase base para unas páginas casi iguales en 1D, donde metemos las cosas comunes */
 export class BasicSceneBase implements IDisposable {
   protected learnCicleCount = new Subject<{count:number, lost:number}>();
   /** Para poder manejar el calback de peticion de control al contexto */
@@ -24,7 +24,7 @@ export class BasicSceneBase implements IDisposable {
   bussy = false;
 
   /** Limites de la escena actual por donde se mueve el drone */
-  sceneLimits = new THREE.Box3(new THREE.Vector3(-12, 0, -12), new THREE.Vector3(12, 12, 12));
+  sceneLimits = new THREE.Box3(new THREE.Vector3(-12, -12, -12), new THREE.Vector3(12, 12, 12));
   /** Probabilidad en cada paso de seleccionar un valor aleatorio */
   exploracionFactor = 0.05;
   /** Numero de ciclos de aprendizaje con cada click */
@@ -91,6 +91,8 @@ export class BasicSceneBase implements IDisposable {
       }
     }
   }
+
+
 
   protected getDroneContext():DroneLearnContext{
     if(!this.drone) throw new Error('Undefined drone');
