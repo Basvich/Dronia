@@ -56,6 +56,9 @@ Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente q
 # Ruta
 
 * Entrenar la red para movimiento en 3D en el espacio
+* Manipulación de la red neuronal
+  * Persistencia
+  * Comprobar si una red entrenada, se puede reusar para otra red ligeramente diferente, y supone alguna ventaja.
 * Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
 * Añadir otra red que permita al dron indicar cual es a su vez el target deseado, por ejemplo para poder "planificar" rutas o evitar obstaculos.
 

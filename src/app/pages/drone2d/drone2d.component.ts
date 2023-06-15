@@ -3,15 +3,16 @@ import { BasicSceneBase } from '../basicSceneBase';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { TDrone3D, TTargetDrone } from 'src/app/Objects/Drone3D';
 import { TDroneMesh, TTargetMesh } from 'src/app/Objects/TDroneMesh';
-import { DroneLearn3DContext, DroneLearnContext, ICicleOptions } from 'src/app/NetsIA/DroneLearnContext';
+import { DroneLearn3DContext, DroneLearnContext, ICicle3DOptions, ICicleOptions, LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
 import { AdapterDrone2D, AdapterDroneTf2 } from 'src/app/NetsIA/AdapterDroneTf';
 import { ModelDron2D } from 'src/app/NetsIA/ModelIA1D';
 import GUI from 'lil-gui';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
-import { MinLapseTroller } from 'src/app/Objects/utils';
+import { MinLapseTroller, Random } from 'src/app/Objects/utils';
 import { Subject } from 'rxjs';
 import * as THREE from 'three';
 import { AdamaxOptimizer } from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
 
 @Component({
   selector: 'app-drone2d',
@@ -19,7 +20,8 @@ import { AdamaxOptimizer } from '@tensorflow/tfjs';
   styleUrls: ['./drone2d.component.scss']
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
-  protected learnCicleCount = new Subject<{ count: number, lost: number }>();
+  modelName='Model2D';
+  protected learnCicleCount = new Subject<LearnInfo>();
   private lastTimestap = 0;
   /** Para poder manejar el calback de peticion de control al contexto */
   protected minLapseAutopilot?: MinLapseTroller;
@@ -58,7 +60,9 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    this.createObjectsDrone();
+    setTimeout(() => {
+      this.createObjectsDrone();
+    }, 500);    
   }
 
   ngOnDestroy(): void {
@@ -81,7 +85,24 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
     this.drone?.Reset();
   }
 
+  public randomResetDrone() {
+    if (!this.drone) return;
+    this.drone.Reset();
+    const pos = [Random.gaussianRandom(0, 3), Random.gaussianRandom(6, 5), 0];
+    const vel = [0, Random.gaussianRandom(0, 2), 0];
+    const pitch = Random.gaussianRandom(0, 0.5);
+
+    this.drone.Position.set(pos[0], pos[1], pos[2]);
+    this.drone.Velocity.set(vel[0], vel[1], vel[2]);
+    this.drone.Pitch = pitch;
+  }
+
   public async testDroneLearnContext() {
+    const lastLoss=(hist:tf.History)=>{
+      const losses=hist.history['loss'] as number[];
+      const last=losses[losses.length-1]??-1;
+      return last;
+    };
     if (!this.drone || this.bussy) return;
     this.bussy = true;
     this.minLapseAutopilot = undefined;
@@ -89,19 +110,54 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (!this.drone) return;
     if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();
-    const opt: ICicleOptions = {
+    const opt: ICicle3DOptions = {
       explorationF: this.exploracionFactor,
-      initialsPos: this.initialsPosIterator
-    };
+      initialsPos: undefined //this.initialsPosIterator
+    };    
+    const infos:LearnInfo[]=[];
     for (let i = 0; i < this.numCicles; i++) {
       console.clear();
-      await this.droneLearnCtx.LearnCicle(opt);
+      const r=await this.droneLearnCtx.LearnCicle(opt);
+      infos.push({
+        cicleCount: 0,
+        loss: lastLoss(r.history),
+        stepsCount: r.steps
+      });
     }
     this.ciclesCount += this.numCicles;
-    this.learnCicleCount.next({ count: this.ciclesCount, lost: 0 });
+    const red=infos.reduce((acum, value)=>{return {sLoss:acum.sLoss+value.loss, sTeps: acum.sTeps+value.stepsCount};}, {sLoss:0, sTeps:0});
+    this.learnCicleCount.next({
+      cicleCount: this.ciclesCount,
+      loss: red.sLoss/this.numCicles,
+      stepsCount: red.sTeps/this.numCicles
+    });
     this.bussy = false;
 
     //void this.droneLearnCtx.LearnDummy();
+  }
+
+  public async saveModel(){
+    if(!this.droneLearnCtx) return;
+    const tfModel=this.droneLearnCtx.NetModel.model;
+    if(!tfModel) return;
+    //const s1=await tfModel.save('localstorage://my-model');
+    const s2=await tfModel.save(`indexeddb://${this.modelName}`);
+
+    //this.model.getWeights(); permite obtener los pesos como tensores
+  }
+
+  /**
+   * Recupera el modelo. En estado experimental
+   * @returns 
+   */
+  public async loadModel(){
+    if(!this.droneLearnCtx) return;
+    const tfModel=this.droneLearnCtx.NetModel.model;
+    if(!tfModel) return;
+    const model = await tf.loadLayersModel(`indexeddb://${this.modelName}`);
+    if(model){
+      this.droneLearnCtx.NetModel.model=model;
+    }
   }
 
   public handlePrefixInitials() {
@@ -220,7 +276,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
       this.targetMesh?.updateFromController();
     }
     if (this.droneLearnCtx) {
-      this.droneLearnCtx.targetPos.y=y;
+      this.droneLearnCtx.targetPos.y = y;
     }
   }
 

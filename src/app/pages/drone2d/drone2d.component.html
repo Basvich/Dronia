@@ -5,7 +5,12 @@
   <div class="controlsGroup">
     <div class="verticalGroup">
       <h4>controls</h4>
-      <button mat-button color="primary" (click)="resetDrone()">resetDrone</button>
+      <div>
+        <button mat-button color="primary" (click)="resetDrone()"
+          matTooltip="Inicializa la posición">resetDrone</button>
+        <button mat-button color="primary" (click)="randomResetDrone()"
+          matTooltip="Pone un estado pseudo aleatorio">rand pos</button>
+      </div>
       <div class="horizontalGroup"><span>Power</span>
         <mat-slider min="0" max="20" step="0.2" discrete>
           <input matSliderThumb [(value)]="TotalForce">
@@ -20,21 +25,30 @@
         <mat-slider min="-3" max="3" step="0.1" discrete disabled="false">
           <input matSliderThumb>
         </mat-slider>
-      </div>     
-      <mat-slide-toggle [disabled]="!droneLearnCtx" [checked]="autoPilotOn" (change)="btnAutoPilotChanged($event)">Autopilot</mat-slide-toggle>
+      </div>
+      <mat-slide-toggle [disabled]="!droneLearnCtx" [checked]="autoPilotOn"
+        (change)="btnAutoPilotChanged($event)">Autopilot</mat-slide-toggle>
     </div>
     <div class="verticalGroup">
-      <h4>tests</h4>      
+      <h4>tests</h4>
       <div>
-      <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración. (0.1 => 10%)">
-        <input matSliderThumb [(value)]="exploracionFactor">
-      </mat-slider>
-      <mat-slide-toggle [(ngModel)]="prefixInitials" (change)="handlePrefixInitials()" matTooltip="Si usa posiciones iniciales prefijadas frente a aleatorias">Prefixed initials</mat-slide-toggle>
+        <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false"
+          matTooltip="Probabilidad exploración. (0.1 => 10%)">
+          <input matSliderThumb [(value)]="exploracionFactor">
+        </mat-slider>
+        <mat-slide-toggle [(ngModel)]="prefixInitials" (change)="handlePrefixInitials()"
+          matTooltip="Si usa posiciones iniciales prefijadas frente a aleatorias">Prefixed initials</mat-slide-toggle>
       </div>
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
         matTooltip="Cuantos ciclos realiza">
-      <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneLearnContext()" matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
-      <button [disabled]="true" mat-flat-button color="secondary" matTooltip="Experimental guardar estado" >Save</button>
+      <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneLearnContext()"
+        matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
+      <div>
+        <button [disabled]="false" mat-flat-button color="secondary" matTooltip="Experimental guardar estado"
+          (click)="saveModel()">Save model</button>
+        <button [disabled]="false" mat-flat-button color="secondary" matTooltip="Experimental recuperar estado"
+          (click)="loadModel()">Load model</button>
+      </div>
     </div>
   </div>
 </div>

@@ -321,6 +321,8 @@ export class AdapterDrone2D implements IAdapterDrone3D {
     if(forcedI[1]===undefined){
       const mr=AdapterDrone2D.getMaxReward(tensorData,3,3);
       iPitch=mr.maxIndex;
+    } else{
+      iPitch=forcedI[1];
     }
     //tf.topk() Nos devuelve el maximo y el indice tambien
     //El 0=>bajar, 1=>igual, 2=>subir
@@ -332,12 +334,21 @@ export class AdapterDrone2D implements IAdapterDrone3D {
       case 2: 
         nextForce+=1;
         break;
-    }
-    if(nextForce<0) nextForce=0;
-    if(nextForce>=this.forces.length) nextForce=this.forces.length-1;
+    }    
+    nextForce=THREE.MathUtils.clamp(nextForce, 0, this.forces.length-1);    
     const fNecesaria = this.forces[nextForce];
     this.currentForceIndex=nextForce;
     this.drone.TotalForce = fNecesaria;
+    let pitch=0;
+    switch(iPitch){
+      case 3: 
+        pitch=-0.1;
+        break;
+      case 5:
+        pitch=0.1;
+        break;
+    }
+    this.drone.PithBalance=pitch;
     //console.log(`Drone Action: ${i} -> TotalForce:${(fNecesaria / this.drone.FuerzaNeutra).toFixed(2)}`);
     return { indexActionSelected: [iForce, iPitch]};
   }

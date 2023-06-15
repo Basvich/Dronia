@@ -131,6 +131,7 @@ export class TDrone3D{
   public set RotationY(v: number) { this.Rotation.y=v; }
   public get RotationZ(): number {return this.Rotation.z;}
   public set RotationZ(v: number) { this.Rotation.z=v;}
+  public set Pitch(v:number) {this.orientationEuler.z=v;}
 
   public get TotalForce():number{return this.totalForce;}
   public set TotalForce(v: number){this.totalForce=THREE.MathUtils.clamp(v,0,maxTotalForce);}
@@ -166,6 +167,7 @@ export class TDrone3D{
 
   public Reset(){
     this.orientationEuler.set(0,0,0);
+    this.Rotation.set(0,0,0);
     this.wBody.set(0,0,0);
     this.velocity.set(0,0,0);
     this.Position.set(0,4,0);
