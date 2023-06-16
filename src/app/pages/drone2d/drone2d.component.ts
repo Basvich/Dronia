@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { BasicSceneBase } from '../basicSceneBase';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { TDrone3D, TTargetDrone } from 'src/app/Objects/Drone3D';
@@ -46,6 +46,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   initialsPosIterator?: Iterator<{ posY: number, velY: number }>;
   private fixedInitialPos?: Array<{ posY: number, velY: number }>;
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
+  @ViewChild("GUI1") GUI1Element!: ElementRef<HTMLElement>;
 
   /** Informa de que se aunmento el número de ciclos de aprendizaje */
   public LearnCicleCount$ = this.learnCicleCount.asObservable();
@@ -62,6 +63,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     setTimeout(() => {
       this.createObjectsDrone();
+      if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();
     }, 500);    
   }
 
@@ -98,6 +100,16 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   public async testDroneLearnContext() {
+    const infos:LearnInfo[]=[];
+    const createInfo=(cicleCount:number)=>{
+      const red=infos.reduce((acum, value)=>{return {sLoss:acum.sLoss+value.loss, sTeps: acum.sTeps+value.stepsCount};}, {sLoss:0, sTeps:0});
+      const res:LearnInfo={        
+          cicleCount,
+          loss: red.sLoss/infos.length,
+          stepsCount: red.sTeps/infos.length
+      };
+      return res;      
+    };
     const lastLoss=(hist:tf.History)=>{
       const losses=hist.history['loss'] as number[];
       const last=losses[losses.length-1]??-1;
@@ -114,7 +126,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
       explorationF: this.exploracionFactor,
       initialsPos: undefined //this.initialsPosIterator
     };    
-    const infos:LearnInfo[]=[];
+    
     for (let i = 0; i < this.numCicles; i++) {
       console.clear();
       const r=await this.droneLearnCtx.LearnCicle(opt);
@@ -123,15 +135,17 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
         loss: lastLoss(r.history),
         stepsCount: r.steps
       });
+      if(infos.length===100){
+        const nfo=createInfo(this.ciclesCount+i+1);
+        this.learnCicleCount.next(nfo);
+      }
     }
     this.ciclesCount += this.numCicles;
-    const red=infos.reduce((acum, value)=>{return {sLoss:acum.sLoss+value.loss, sTeps: acum.sTeps+value.stepsCount};}, {sLoss:0, sTeps:0});
-    this.learnCicleCount.next({
-      cicleCount: this.ciclesCount,
-      loss: red.sLoss/this.numCicles,
-      stepsCount: red.sTeps/this.numCicles
-    });
-    this.bussy = false;
+    if(infos.length>0){
+      const nfo=createInfo(this.ciclesCount);    
+      this.learnCicleCount.next(nfo);
+      this.bussy = false;
+    }
 
     //void this.droneLearnCtx.LearnDummy();
   }
@@ -156,6 +170,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
     if(!tfModel) return;
     const model = await tf.loadLayersModel(`indexeddb://${this.modelName}`);
     if(model){
+      model.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
       this.droneLearnCtx.NetModel.model=model;
     }
   }
@@ -245,15 +260,20 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private createMenuLIL() {
     if (this.miniMenuGui) return;
+    let parent=document.getElementById('GUI1');
+    if(!parent) parent=this.GUI1Element.nativeElement;
     const gui = new GUI();
     this.miniMenuGui = gui;
     if (this.drone) {
       const folderDrone = gui.addFolder('Drone');
+      const folderControl=folderDrone.addFolder('Control');
+      folderControl.add(this,'TotalForce',0, 20, 2).listen();
+      folderControl.add(this,'PitchBalance', -0.4, 0.4, 0.05).listen();
       const folderPos = folderDrone.addFolder('Position');
       folderPos.add(this.drone.Position, 'x').listen().decimals(2).disable();
       folderPos.add(this.drone.Position, 'y').listen().decimals(2).disable();
-      const folderVel = folderDrone.addFolder('Velocity');
-      folderVel.add(this.drone.Velocity, 'x', -4, 4).listen().decimals(2).disable();
+      const folderVel = folderDrone.addFolder('Velocity');      
+      folderVel.add(this.drone.Velocity, 'x', -4, 4).listen().decimals(2).disable();      
       folderVel.add(this.drone.Velocity, 'y', -4, 4).listen().decimals(2).disable();
       const folderAcc = folderDrone.addFolder('Acceleration');
       folderAcc.add(this.drone.NetForce, 'x', -2, 2).listen().decimals(2).disable();

@@ -15,6 +15,7 @@ import { Drone1AcurrateComponent } from './graph/drone1-acurrate/drone1-acurrate
 import { TestModelsComponent } from './pages/test-models/test-models.component';
 import { BasicScene2Component } from './pages/basic-scene2/basic-scene2.component';
 import { Drone2dComponent } from './pages/drone2d/drone2d.component';
+import { Drone3dLearningComponent } from './graph/drone3d-learning/drone3d-learning.component';
 
 
 @NgModule({
@@ -27,7 +28,8 @@ import { Drone2dComponent } from './pages/drone2d/drone2d.component';
     Drone1AcurrateComponent,
     TestModelsComponent,
     BasicScene2Component,    
-    Drone2dComponent    
+    Drone2dComponent,
+    Drone3dLearningComponent    
   ],
   imports: [
     MaterialModule,

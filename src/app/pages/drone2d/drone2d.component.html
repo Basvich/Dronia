@@ -10,25 +10,11 @@
           matTooltip="Inicializa la posición">resetDrone</button>
         <button mat-button color="primary" (click)="randomResetDrone()"
           matTooltip="Pone un estado pseudo aleatorio">rand pos</button>
-      </div>
-      <div class="horizontalGroup"><span>Power</span>
-        <mat-slider min="0" max="20" step="0.2" discrete>
-          <input matSliderThumb [(value)]="TotalForce">
-        </mat-slider>
-      </div>
-      <div class="horizontalGroup"><span>Pitch</span>
-        <mat-slider min="-1" max="1" step="0.1" discrete>
-          <input matSliderThumb [(value)]="PitchBalance">
-        </mat-slider>
-      </div>
-      <div class="horizontalGroup"><span>Roll</span>
-        <mat-slider min="-3" max="3" step="0.1" discrete disabled="false">
-          <input matSliderThumb>
-        </mat-slider>
-      </div>
+      </div>      
       <mat-slide-toggle [disabled]="!droneLearnCtx" [checked]="autoPilotOn"
         (change)="btnAutoPilotChanged($event)">Autopilot</mat-slide-toggle>
     </div>
+    <div class="verticalGroup" #GUI1></div>
     <div class="verticalGroup">
       <h4>tests</h4>
       <div>
@@ -36,7 +22,7 @@
           matTooltip="Probabilidad exploración. (0.1 => 10%)">
           <input matSliderThumb [(value)]="exploracionFactor">
         </mat-slider>
-        <mat-slide-toggle [(ngModel)]="prefixInitials" (change)="handlePrefixInitials()"
+        <mat-slide-toggle [disabled]="true" [(ngModel)]="prefixInitials" (change)="handlePrefixInitials()"
           matTooltip="Si usa posiciones iniciales prefijadas frente a aleatorias">Prefixed initials</mat-slide-toggle>
       </div>
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
@@ -49,6 +35,10 @@
         <button [disabled]="false" mat-flat-button color="secondary" matTooltip="Experimental recuperar estado"
           (click)="loadModel()">Load model</button>
       </div>
+    </div>
+    <div>
+      <app-drone3d-learning [ciclesCount]="LearnCicleCount$">
+      </app-drone3d-learning>
     </div>
   </div>
 </div>

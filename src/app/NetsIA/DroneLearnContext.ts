@@ -404,7 +404,7 @@ export class DroneLearn3DContext {
       this.drone.Simulate(this.LapseSegCicle); //Simulamos en pasos de 100ms
 
       const reward = this.jury.InstanReward(this.drone);
-      if (info !== undefined && (stepCount % 128 === 0 || randomExplore || (reward <= this.minReward))) {
+      if (info !== undefined && (stepCount % 128 === 0 || (reward <= this.minReward))) {
         console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
       }
       stepCount++;
