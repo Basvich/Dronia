@@ -37,7 +37,7 @@
       <input matInput type="number" placeholder="num cicles" min="1" max="30" step="4" [(ngModel)]="numCicles"
         matTooltip="Cuantos ciclos realiza">
       <button [disabled]="bussy" mat-flat-button color="primary" (click)="testDroneLearnContext()" matTooltip="Ejecuta {{numCicles}} ciclos de aprendizaje">Learn cicles</button>
-      
+      <button mat-flat-button color="secondary" matTooltip="Experimental guardar estado" (click)="saveModel()">Save</button>
     </div>
     <div>
       <app-drone1-acurrate [droneContext]="droneLearnCtx"

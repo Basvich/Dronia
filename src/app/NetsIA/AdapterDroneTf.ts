@@ -5,19 +5,42 @@ import * as tf from '@tensorflow/tfjs';
 /**Información util para evitar recalculos en el los  */
 export interface InfoAction {
   /**Indice de la accion que se tuvo en cuenta */
-  indexActionY: number;
+  indexActionSelected: number | number[];
 }
+
+
+
 
 export interface IAdapterDroneTf {
   targetY:number;
+  
   /** Crea el tensor con el estado del dron (OJO, recordar liberarlo) */
   getStateTensor: () => tf.Tensor2D;
-  /** Pasandole el tensor con los estados finitos, controla el dron */
-  setControlData: (data: tf.Tensor2D | undefined, forcedI?: number) => InfoAction | undefined ;
+  /** Pasandole el tensor con los estados finitos, controla el dron
+   * @param data datos de entrada
+   * @param forcedI si el indice a seleccionar viene prefijado
+   */
+  setControlData: (data: tf.Tensor2D | undefined, ...forcedI: Array<number|undefined>) => InfoAction | undefined ;
   getMappedTensor: (dataXY: number[][])=> tf.Tensor2D ;
   /** Basicamente para depuración, la fuerza aplicada finalmente */
-  TotalRelativeForce: (index:number)=>number;
+  TotalRelativeForce: (index: number | number[])=>number;
+}
 
+/** Version del interface mas avanzada para 3D */
+export interface IAdapterDrone3D{
+  target3D: THREE.Vector3;
+  /**Tamaños en los que dividimos nosotros las salidas de la red */
+  outputSizes:number[];
+  /** Crea el tensor con el estado del dron (OJO, recordar liberarlo) */
+  getStateTensor: () => tf.Tensor2D;
+  /** Pasandole el tensor con los estados finitos, controla el dron
+   * @param data datos de entrada
+   * @param forcedI si el indice a seleccionar viene prefijado
+   */
+  setControlData: (data: tf.Tensor2D | undefined, ...forcedI: Array<number|undefined>) => InfoAction | undefined ;
+  getMappedTensor: (dataXY: number[][])=> tf.Tensor2D ;
+  /** Basicamente para depuración, la fuerza aplicada finalmente */
+  //TotalRelativeForce: (index:number)=>number;
 }
 
 /**
@@ -28,6 +51,7 @@ export default class AdapterDroneTf implements IAdapterDroneTf {
   private forces: number[];
   /**El target de la posición deseada */
   public targetY = 6;
+  public target3D= new THREE.Vector3(0,6,0);
   public get Forces(): number[] { return this.forces; }
 
   constructor(private drone: TDrone3D) {
@@ -80,11 +104,12 @@ export default class AdapterDroneTf implements IAdapterDroneTf {
     const fNecesaria = this.forces[i];
     this.drone.TotalForce = fNecesaria;
     //console.log(`Drone Action: ${i} -> TotalForce:${(fNecesaria / this.drone.FuerzaNeutra).toFixed(2)}`);
-    return { indexActionY: i };
+    return { indexActionSelected: i };
   }
 
-  public TotalRelativeForce(index: number): number {
-    return this.forces[index] / this.drone.FuerzaNeutra;
+  public TotalRelativeForce(index: number | number[]): number {
+    const i=(typeof(index) === 'number')?index: index[0];
+    return this.forces[i] / this.drone.FuerzaNeutra;
   }
 
   /**
@@ -140,6 +165,7 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
   private forces: number[];
   /**El target de la posición deseada */
   public targetY = 6;
+  public target3D= new THREE.Vector3(0,6,0);
 
   constructor(private drone: TDrone3D) {
     //entre [0,2] con resolucion 0.1
@@ -199,7 +225,7 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
     this.currentForceIndex=nextForce;
     this.drone.TotalForce = fNecesaria;
     //console.log(`Drone Action: ${i} -> TotalForce:${(fNecesaria / this.drone.FuerzaNeutra).toFixed(2)}`);
-    return { indexActionY: i };
+    return { indexActionSelected: i };
   }
 
   public normalizePosY(posY: number): number {
@@ -231,7 +257,146 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
     return tf.tensor2d(arrXY);
   }
 
+  public TotalRelativeForce(index: number | number[]): number {
+    const i=(typeof(index) === 'number')?index: index[0];
+    return this.forces[i] / this.drone.FuerzaNeutra;
+  }
+}
+
+/** Adaptador para un dron que se mueve en 2D */
+export class AdapterDrone2D implements IAdapterDrone3D {
+  private minClampPos=new THREE.Vector3(-20,-20,-20);
+  private maxClampPos=new THREE.Vector3(20,20,20);
+  private minClampVel=new THREE.Vector3(-4,-4,-4);
+  private maxClampVel=new THREE.Vector3(4,4,4);
+  private relativePos=new THREE.Vector3(0,0,0);
+  private ClampedVel=new THREE.Vector3(0,0,0);
+  private currentForceIndex=0;  
+  /** Fuerza en el sentido de los rotores */
+  private forces: number[];
+  /**Tamaños en los que dividimos nosotros el sentido del número de entradas */
+  public outputSizes=[3,3];
+  /**El target de la posición deseada */
+  public target3D= new THREE.Vector3(0,6,0);
+
+  constructor(private drone: TDrone3D) {
+    //entre [0,2] con resolucion 0.1
+    const step=0.1;
+    const ln=2/step+1;
+    this.forces=Array.from({length:ln}, (item, index) =>{ return drone.FuerzaNeutra * (index*step);});
+  }
+
+  /**
+ * El estado del 
+ * @returns Posicion relativa, velocidad
+ */
+  public getStateTensor(): tf.Tensor2D {
+    this.relativePos.copy(this.drone.Position); //Copiando, evitamos recrear objetos
+    this.relativePos.sub(this.target3D);
+    this.relativePos.clamp(this.minClampPos, this.maxClampPos); //se limita los valores de la posición relativa
+    this.ClampedVel.copy(this.drone.Velocity).clamp(this.minClampVel, this.maxClampVel);
+    const force=this.drone.NetForce;
+    return tf.tensor2d([[this.relativePos.x, this.relativePos.y, this.ClampedVel.x, this.ClampedVel.y, force.x, force.y]]);
+  }
+
+  /**
+   * Toma la predicción obtenida de la red, y la traduce en el control al dron
+   * 
+   * @param data El array con las posibilidades de cada accion. Las 3 primeras son la variación de fuerza, las 3 siguienes son el roll (giro en torno a Z)
+   * @param forcedI El indice de la opcion seleccionada a la fuerza
+   * @returns Información sobre la acción ejecutada
+   */
+  public setControlData(data: tf.Tensor2D | undefined, ...forcedI: Array<number|undefined>): InfoAction | undefined {
+    if (!data) return;
+   
+    const tensorData = data.dataSync() as Float32Array;   
+    let iForce = 0;
+    let iPitch=3;
+    if (forcedI[0] === undefined) {
+      const mr=AdapterDrone2D.getMaxReward(tensorData,0,3);
+      iForce=mr.maxIndex;
+    } else {
+      iForce= forcedI[0];
+    }
+    if(forcedI[1]===undefined){
+      const mr=AdapterDrone2D.getMaxReward(tensorData,3,3);
+      iPitch=mr.maxIndex;
+    } else{
+      iPitch=forcedI[1];
+    }
+    //tf.topk() Nos devuelve el maximo y el indice tambien
+    //El 0=>bajar, 1=>igual, 2=>subir
+    let nextForce=this.currentForceIndex;
+    switch(iForce){
+      case 0 :
+         nextForce-=1;
+         break;
+      case 2: 
+        nextForce+=1;
+        break;
+    }    
+    nextForce=THREE.MathUtils.clamp(nextForce, 0, this.forces.length-1);    
+    const fNecesaria = this.forces[nextForce];
+    this.currentForceIndex=nextForce;
+    this.drone.TotalForce = fNecesaria;
+    let pitch=0;
+    switch(iPitch){
+      case 3: 
+        pitch=-0.1;
+        break;
+      case 5:
+        pitch=0.1;
+        break;
+    }
+    this.drone.PithBalance=pitch;
+    //console.log(`Drone Action: ${i} -> TotalForce:${(fNecesaria / this.drone.FuerzaNeutra).toFixed(2)}`);
+    return { indexActionSelected: [iForce, iPitch]};
+  }
+
+  
+
+  /**
+   * 
+   * @param dataXY array de [x0, y0, velY, pitch]
+   * @returns un tensor ajustado según el propio adaptador
+   */
+  public getMappedTensor(dataXY: number[][]): tf.Tensor2D {
+    throw new Error('Function not implemented.');
+    //if (dataXY.length !== 2) throw new Error('Tiene que tener un array X y otro Y de identicas dimensiones');
+    //Devuelve un array con vectores[y, vely]
+    const relativePos=new THREE.Vector3();
+    const clampedVel=new THREE.Vector3();
+    const arrXY = dataXY.map((value) => {
+      relativePos.set(value[0],value[1],0);
+      relativePos.sub(this.target3D).clamp(this.minClampPos, this.maxClampPos);
+      
+      clampedVel.set(value[0],value[1],0).clamp(this.minClampVel, this.maxClampVel);
+      return [relativePos.x, relativePos.y];
+    });
+    return tf.tensor2d(arrXY);
+  }
+
   public TotalRelativeForce(index: number): number {
     return this.forces[index] / this.drone.FuerzaNeutra;
+  }
+
+  /**
+   * Devuelve el indice con la maxima recompensa en ese intervalo
+   * @param data 
+   * @param i0 
+   * @param len 
+   * @returns El indice basado en el array completo
+   */
+  private static getMaxReward(data: Float32Array, i0:number, len:number): { maxIndex: number; maxValue: number; }{
+    let maxValue=data[i0];
+    let maxIndex=i0;
+    const f=i0+len;
+    for(let i=i0+1; i<f; i++){
+      if(data[i]>maxValue){
+        maxValue=data[i];
+        maxIndex=i;
+      }
+    }
+    return{maxIndex,maxValue};
   }
 }

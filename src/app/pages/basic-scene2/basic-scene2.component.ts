@@ -21,12 +21,9 @@ import { Model1D2 } from 'src/app/NetsIA/ModelIA1D';
   templateUrl: './basic-scene2.component.html',
   styleUrls: ['./basic-scene2.component.scss']
 })
-export class BasicScene2Component extends BasicSceneBase implements OnInit, AfterViewInit, OnDestroy {
-  
- 
+export class BasicScene2Component extends BasicSceneBase implements OnInit, AfterViewInit, OnDestroy { 
   private lastTimestap = 0;
   payload = 0;
-
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
   /** Informa de que se aunmento el número de ciclos de aprendizaje */
@@ -44,6 +41,16 @@ export class BasicScene2Component extends BasicSceneBase implements OnInit, Afte
 
   ngOnDestroy(): void {
     this.dispose();    
+  }
+
+  public async saveModel(){
+    if(!this.droneLearnCtx) return;
+    const tfModel=this.droneLearnCtx.NetModel.model;
+    if(!tfModel) return;
+    const s1=await tfModel.save('localstorage://my-model');
+    const s2=await tfModel.save('indexeddb://my-model');
+
+    //this.model.getWeights(); permite obtener los pesos como tensores
   }
 
 

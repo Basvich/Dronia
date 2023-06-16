@@ -127,7 +127,7 @@ function fill(am:ActionsMemory<tf.Tensor, tf.Tensor>, l:number, rewardF: (i:numb
     const sample:IActionReward<tf.Tensor1D, tf.Tensor> ={
       currentState,
       action,
-      info: {indexActionY:0},
+      info: {indexActionSelected:0},
       reward: rewardF(i)
     };
     am.add(sample);

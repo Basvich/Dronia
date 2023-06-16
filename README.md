@@ -29,13 +29,19 @@ Para controlar el dron, se obtiene el array de las 5 posibles acciones, y se tom
 
 El objetivo de la red, es entonces acabar entrenando el campo recompensa de cada uno de los posibles estados.
 
-Ampliar esto en [mas información detallada](./wiki/aproximacionPrimera.md)
+👉 Ampliar esto en [mas información detallada](./wiki/aproximacionPrimera.md)
 
 ### Entrenamiento simple en 1D version 2
 
 Este caso es una variación del simple, pero en vez de manejar fuerzas deseadas, lo que se maneja es la variación de fuerzas, o sea el control básicamente indica si queremos más o menos fuerza aplicada. Entre las variables de entrada también se incluye la fuerza sentida por el dron (cuando está en reposo, sería de 1 apuntando hacia abajo)
 
-Ampliar esto en [mas información detallada](./wiki/aproximacionPrimeraB.md)
+👉 Ampliar esto en [Entrenamiento 1D 2ª versión](./wiki/aproximacionPrimeraB.md)
+
+### Entrenamiento con movimiento en 2D
+
+Se permite que el movimiento sea en 2D, con lo que tenemos control de fuerza y orientación.
+
+👉 Ampliar esto en [Entrenamiento 2D](./wiki/aproximacion2D.md)
 
 #### Jurado para las recompensas
 
@@ -48,6 +54,16 @@ Es muy importante que los estados iniciales del dron, sean aleatorios tanto en p
 La red converge bastante rápidamente hacia el estado que considera mejor, el cual es mantener una fuerza neutra en el dron. Esto se ve en que en los datos obtenidos por la red, se nota la recompensa para el estado neutro, con bastante mas valor que las demás.
 
 Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente quieto, casi sin tendencia a acercase a la altura objetivo, al ir realizando más entrenamientos, se nota como esperado que las recompensas de los demás estados van creciendo también, pero ese proceso es tremendamente largo hasta que el dron aprenda a moverse de esas posiciones de estabilidad hacia la posición deseada.
+
+# Ruta
+
+* Entrenar la red para movimiento en 3D en el espacio
+* Manipulación de la red neuronal
+  * Persistencia
+  * Comprobar si una red entrenada, se puede reusar para otra red ligeramente diferente, y supone alguna ventaja.
+* Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
+* Añadir otra red que permita al dron indicar cual es a su vez el target deseado, por ejemplo para poder "planificar" rutas o evitar obstaculos.
+
 
 
 # Readme por defecto

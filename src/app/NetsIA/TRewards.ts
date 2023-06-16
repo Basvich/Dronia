@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import { TDrone3D } from "../Objects/Drone3D";
 
 
@@ -8,7 +9,7 @@ export class TReward{
   private c=0;
   private max_rew=10;
   private radius=6;
-  private velocityFactor=6;
+  private velocityFactor=3;
   public targetY=6;
 
   /** Premio/penalización por acabar mal */
@@ -93,7 +94,7 @@ export class TReward{
     const posY=drone.Position.y;     
     const velY=drone.Velocity.y;   
      //Proyectamos la psocion actual junto con la velocidad
-    const futPosY=posY+ 4*velY;
+    const futPosY=posY+ this.velocityFactor*velY;
     const difY=futPosY- this.targetY; 
     const absDifY=Math.abs(difY);
     const yr3=this.radius/3;
@@ -107,6 +108,91 @@ export class TReward{
       res=rew0-m*y2;
     }else {
       res=-2*(absDifY-this.radius);  //Simplemente decreciente a medida que nos alejamos
+    }
+    //console.log({posY,velY,futPosY,res});
+    return res;
+  }
+}
+
+export class TReward3D{
+  private futPos=new THREE.Vector3();
+  private desiredNetForce=new THREE.Vector3(0,-1,0);
+  private a=0;
+  private b=0;
+  private c=0;
+  private max_rew=10;
+  private radius=6;
+  private velocityFactor=6;
+  public target=new THREE.Vector3(0,6,0);
+
+  /** Premio/penalización por acabar mal */
+  public badReward=-20;
+  public goodReward=20;
+  /** Por acabar sin conseguir nada */
+  public badMiniReward=-5;
+
+  public constructor(){
+    this.initParams();
+  }
+  
+
+  /**
+   * Calcula el premio en base a la posicion y velocidad del drone, junto con el target
+   * @param drone 
+   */
+  public InstanReward(drone:TDrone3D):number{
+     //return this.cuadraticReward(drone);
+     return this.polinomialReward(drone);
+  }
+
+  /**
+   * Si se da por obtenido el objetivo
+   * @param drone 
+   * @returns >0 si el objetivo está conseguido
+   */
+  public IsDone(drone:TDrone3D):number{
+    let res=0;
+    const limitV=0.3;
+    const dist=drone.Position.manhattanDistanceTo(this.target);
+    let ok=Math.abs(dist)<=0.2;
+    const absVel= drone.Velocity.manhattanLength();
+    ok=ok && absVel<=limitV;
+    if(ok){ //Damos un premio proporcional a lo cerca que queda
+      const rv=this.goodReward-(this.goodReward/limitV)*absVel;
+      res=rv;
+      //Y otro si la aceleración está cerca de 1 (parado)
+      const accel=drone.NetForce.manhattanDistanceTo(this.desiredNetForce);
+      if(accel<0.4){
+        res=res+((0.4-accel)/0.4)*this.goodReward/2;
+      }
+    }
+    return res;
+  }
+
+  private initParams() {
+    this.c=this.max_rew;
+    this.b=0; //Maximo en 0
+    this.a=-this.max_rew/(this.radius*this.radius);
+  }
+
+  private polinomialReward(drone:TDrone3D):number{
+    let res=0;    
+     //Proyectamos la psocion actual junto con la velocidad
+    this.futPos.copy(drone.Position).addScaledVector(drone.Velocity, 2);        
+    this.futPos.sub(this.target); //Referenciada a
+    const absDist=this.futPos.manhattanLength();    
+    
+    const yr3=this.radius/3;
+    const rew0=this.max_rew/2;
+    if(absDist<yr3){
+      const m=-rew0/yr3;
+      res=this.max_rew+m*absDist;
+    }else if(absDist<this.radius){
+      const y2=absDist-yr3;
+      const m=rew0/(this.radius-yr3);
+      res=rew0-m*y2;
+    }else {
+      res=-2*(absDist-this.radius);  //Simplemente decreciente a medida que nos alejamos
     }
     //console.log({posY,velY,futPosY,res});
     return res;
