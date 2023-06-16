@@ -62,7 +62,8 @@ export class Drone3dLearningComponent {
   ngOnInit(): void {
     if(this.ciclesCount!==undefined){
       this.ciclesCount.pipe(takeUntil(this.destroyed)).subscribe({
-        next: (value:LearnInfo)=>{          
+        next: (value:LearnInfo)=>{    
+          console.log(`[Drone3dLearning] recibido info cicles: value:${value.cicleCount}`)      ;
           this.updateCharFromModel(value);
           this.ngChart.update();   
         }
@@ -91,7 +92,6 @@ export class Drone3dLearningComponent {
 
   private updateCharFromModel(cicleCount: LearnInfo){
     if(!this.ngChart.chart) return;
-    let i=0;
     this.ngChart.chart.data.labels?.push(cicleCount.cicleCount);  
     this.ngChart.chart.data.datasets[0].data.push(cicleCount.loss);
     this.ngChart.chart.data.datasets[1].data.push(cicleCount.stepsCount);

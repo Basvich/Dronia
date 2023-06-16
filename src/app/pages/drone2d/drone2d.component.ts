@@ -1,18 +1,17 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { BasicSceneBase } from '../basicSceneBase';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { TDrone3D, TTargetDrone } from 'src/app/Objects/Drone3D';
 import { TDroneMesh, TTargetMesh } from 'src/app/Objects/TDroneMesh';
-import { DroneLearn3DContext, DroneLearnContext, ICicle3DOptions, ICicleOptions, LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
-import { AdapterDrone2D, AdapterDroneTf2 } from 'src/app/NetsIA/AdapterDroneTf';
+import { ICicle3DOptions, LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
+import { AdapterDrone2D } from 'src/app/NetsIA/AdapterDroneTf';
 import { ModelDron2D } from 'src/app/NetsIA/ModelIA1D';
 import GUI from 'lil-gui';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { MinLapseTroller, Random } from 'src/app/Objects/utils';
 import { Subject } from 'rxjs';
 import * as THREE from 'three';
-import { AdamaxOptimizer } from '@tensorflow/tfjs';
 import * as tf from '@tensorflow/tfjs';
+import { DroneLearn3DContext } from 'src/app/NetsIA/DroneLearn3DContext';
 
 @Component({
   selector: 'app-drone2d',
@@ -129,23 +128,24 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
     
     for (let i = 0; i < this.numCicles; i++) {
       console.clear();
-      const r=await this.droneLearnCtx.LearnCicle(opt);
+      const r=await this.droneLearnCtx.LearnCicleAgregated(opt); //await this.droneLearnCtx.LearnCicle(opt);
       infos.push({
         cicleCount: 0,
         loss: lastLoss(r.history),
         stepsCount: r.steps
       });
-      if(infos.length===100){
+      if(infos.length===10){
         const nfo=createInfo(this.ciclesCount+i+1);
         this.learnCicleCount.next(nfo);
+        infos.length=0;
       }
     }
     this.ciclesCount += this.numCicles;
     if(infos.length>0){
       const nfo=createInfo(this.ciclesCount);    
-      this.learnCicleCount.next(nfo);
-      this.bussy = false;
+      this.learnCicleCount.next(nfo);      
     }
+    this.bussy = false;
 
     //void this.droneLearnCtx.LearnDummy();
   }

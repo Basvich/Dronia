@@ -36,7 +36,7 @@ En cada ciclo de aprendizaje, se situa el dron en una posición aleatoria, va to
 
 Para que pueda converger algo la red (dependiendo de su complejidad), se necesitan idealmente unos miles de samples para que pueda converger algo la red. Sin embargo en este caso, debido a que enseguida el modelo se sale de los limites (incluso aunque sean mayores), solo se obtienen del orden de un centenar de samples por ciclo, lo que hace que tenga una tasa de aprendizage en cada ciclo muy pequeña.
 
->💡 🚧 Se modifica la estrategia, para que en vez de realizar el entrenamiento con cada ciclo, pueda realizar diferentes pruebas consecutivas y conseguir mas datos para poder dar a la red para entrenar. 🚧
+>💡  Se modifica la estrategia, para que en vez de realizar el entrenamiento con cada ciclo, pueda realizar diferentes pruebas consecutivas y conseguir mas datos para poder dar a la red para entrenar. 
 
 ### Dar volteretas con el dron no es tan mala solución
 
@@ -45,3 +45,8 @@ Una de las tipicas cosas que quizás no pensamos, son las soluciones que se van 
 Al ponerse a girar el dron, acaba realizando circulos pequeños, y puede mantenerse recibiendo mayor recompensa que quizas apuntar en alguna dirección y volar hacía ahí, ya que acaba cayendo más lentamente. Puede llevar muchisimos ciclos de entrenamiento conseguir que el dron aprenda a salir de esas volteretas apuntando mas o menos al target, y que aprenda que esa salida es mejor que dar vueltas.
 
 
+### Obtener NAN en la obtención de los datos de loss
+
+A veces, después de algunos ciclos de entrenamiento, se empieza a obtener el valor NAN como loss en la parte de aprendizaje de TF.js
+
+🚧 Comprobar si no se trata de exploding gradient problem
