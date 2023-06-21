@@ -5,7 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from 'src/material.module';
-import { BasicSceneComponent } from './basic-scene/basic-scene.component';
+import { BasicSceneComponent } from './pages/basic-scene/basic-scene.component';
 import { ThreeRenderComponent } from './three-render/three-render.component';
 import { LearnGraphComponent } from './Dlg/learn-graph/learn-graph.component';
 import { Drone1DComponent } from './graph/drone1-d/drone1-d.component';
@@ -16,6 +16,7 @@ import { TestModelsComponent } from './pages/test-models/test-models.component';
 import { BasicScene2Component } from './pages/basic-scene2/basic-scene2.component';
 import { Drone2dComponent } from './pages/drone2d/drone2d.component';
 import { Drone3dLearningComponent } from './graph/drone3d-learning/drone3d-learning.component';
+import { Drone2dGeneticComponent } from './pages/drone2d-genetic/drone2d-genetic.component';
 
 
 @NgModule({
@@ -29,7 +30,8 @@ import { Drone3dLearningComponent } from './graph/drone3d-learning/drone3d-learn
     TestModelsComponent,
     BasicScene2Component,    
     Drone2dComponent,
-    Drone3dLearningComponent    
+    Drone3dLearningComponent,
+    Drone2dGeneticComponent    
   ],
   imports: [
     MaterialModule,

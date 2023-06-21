@@ -1,16 +1,16 @@
 import { Component, OnDestroy, ViewChild } from '@angular/core';
 import * as THREE from 'three';
-import { Model1D } from '../NetsIA/ModelIA1D';
-import { TReward } from '../NetsIA/TRewards';
-import { TDrone3D, TTargetDrone } from '../Objects/Drone3D';
-import { ThreeRenderComponent } from '../three-render/three-render.component';
-import { TDroneMesh, TTargetMesh } from '../Objects/TDroneMesh';
-import { DroneLearnContext, ICicleOptions } from '../NetsIA/DroneLearnContext';
+import { Model1D } from '../../NetsIA/ModelIA1D';
+import { TReward } from '../../NetsIA/TRewards';
+import { TDrone3D, TTargetDrone } from '../../Objects/Drone3D';
+import { ThreeRenderComponent } from '../../three-render/three-render.component';
+import { TDroneMesh, TTargetMesh } from '../../Objects/TDroneMesh';
+import { DroneLearnContext, ICicleOptions } from '../../NetsIA/DroneLearnContext';
 import { Subject } from 'rxjs';
-import { MinLapseTroller } from '../Objects/utils';
+import { MinLapseTroller } from '../../Objects/utils';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import GUI from 'lil-gui';
-import { BasicSceneBase } from '../pages/basicSceneBase';
+import { BasicSceneBase } from '../basicSceneBase';
 
 
 const Limits = {

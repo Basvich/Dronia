@@ -3,6 +3,7 @@
 Esto es usando un modelo que puede moverse en 2 dimensiones: [x,y]. Para ello, se usa en el control de dron además la posibilidad de controlar el pith, o sea la inclinación en torno al eje Z, dicho de otra forma, el cabeceo. Con ello el dron puede moverse tambien en el eje X.
 
 En cuanto a los datos que se usan para el entrenamiento, hace falta tener entonces la siguiente información:
+
 * Fuerzas detectadas, esto son los componentes de las fuerzas en X e Y. Esta información permitiría a la red conocer la orientación y aceleración del dron. Por ejemplo si está perfectamente estable y horizontal, tendría como fuerza y=-1 siendo x=0. Si está inclinado unos 45º y con velocidad constante, tendría una fuerza y~=1,41 e x~=-1,41. Si se deja caer, en ese momento todas las fuerzas son 0, aumentando la y hasta el momento en que alcance la velocidad limite en el que se alcanza de nuevo y=-1.
 * Velocidades x,y, en este caso referidas al mundo, que proporcionan la velocidad con la que nos movemos.
 * Posición absoluta en x,y. Que para el calculo de las recompensas se usa como relativa al targer deseado.

@@ -11,16 +11,13 @@ El objetivo principal de este proyecto es probar el aprendizaje reforzado en un 
 
 > ⚠️ Esta misma wiki, se usa como repositorio de notas que se van tomando, no como un documento final, repasado, corregido, etc. con lo que es mas que probable que tenga ideas repetidas, no tan bien redactadas...En algún futuro de vez en cuando se irá repasando la documentación para dejarla mejor.
 
-
-
 ## Ejemplos
-
 
 ![Alt text](wiki/media/pantallazo1.png)
 
+Los ejemplos están básicamente puestos en distintas páginas de la misma aplicación. Cada paso o tema nuevo, puede ser casi una copia/modificacion/generalización del anterior, para añadir nuevas cosas. No se eliminan los pasos anteriores (como si se haría en una aplicación final), ya que sirven para poder probar alguna cosa en un entorno mas simple, si no funcionase bien en caso mas avanzado.
+
 ### Entrenamiento simple en 1D
-
-
 
 En este caso, lo que se busca es partiendo de un espacio continuo, con las variables posición y velocidad, se quiere realizar un entrenamiento reforzado para que el dron se mantenga estable a cierta altura.
 En la red, tenemos 2 entradas, y 5 posibles estados de salida, correspondientes a las posibles acciones a tomar: 5 posibles niveles de potencia.
@@ -55,18 +52,18 @@ La red converge bastante rápidamente hacia el estado que considera mejor, el cu
 
 Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente quieto, casi sin tendencia a acercase a la altura objetivo, al ir realizando más entrenamientos, se nota como esperado que las recompensas de los demás estados van creciendo también, pero ese proceso es tremendamente largo hasta que el dron aprenda a moverse de esas posiciones de estabilidad hacia la posición deseada.
 
-# Ruta
+## Ruta
 
 * Entrenar la red para movimiento en 3D en el espacio
 * Manipulación de la red neuronal
-  * Persistencia
+  * Persistencia entre ejecuciones
   * Comprobar si una red entrenada, se puede reusar para otra red ligeramente diferente, y supone alguna ventaja.
 * Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
+  * Usar WebWorkers para poder realizar entrenamiento simultaneo de varios drones.
+  * Sistema de pruebas comunes a multiples candidatos para poder valorar cuales son los mejores.
 * Añadir otra red que permita al dron indicar cual es a su vez el target deseado, por ejemplo para poder "planificar" rutas o evitar obstaculos.
 
-
-
-# Readme por defecto
+## Readme por defecto
 
 Teniendo el entorno con node.js instalado (>=18), y angular (actualmente la v16), se puede descargar el proyecto, y usando visual code, ejecutar directamente sin ninguna otra dependencia especial, ya que están todas incluidas dentro (como cualquier proyecto angular).
 
