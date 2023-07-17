@@ -43,8 +43,6 @@ En el eje vertical, tenemos para cada punto la recompensa esperada si se toma es
 
 Como estamos reproduciendo las recompensas esperadas, entonces en un estado cualquiera, el dron tomará la acción que le proporcione la mayor recompensa, o sea la que está en la parte superior.
 
-
-
 <img  src="media/graph_1_a.png" alt="Velocidad 0">
 
 En esta gráfica (tomada después de unos 60 ciclos de entrenamiento), podemos ver que acción tomará el dron según su altura y velocidad inicial 0.
@@ -59,8 +57,6 @@ En está otra gráfica, la velocidad inicial es -1 (hacia abajo).
 * En posiciones un poco mas altas, la fuerza es 1.5, que viene a ser _frenar pero no tanto_.
 
 ---
-
-
 <img  src="media/graph_1_c.png" alt="Velocidad 0.5">
 Con una ligera velocidad positiva de 0.5, la acción preferida es directamente tener poca potencia: F0.5, lo que hace que el dron tienda a bajar.
 
@@ -73,5 +69,3 @@ Finalmente cuando se está probando la simulación, lo que ocurre es que el dron
 Cuando se está simulando el modelo, se puede añadir una carga adicional (payload), la cual se suma a la masa del dron. Hay que tener en cuenta que en ningun momento esta masa adicional forma parte del entrenamiento, y se usa para ver que ocurre con un modelo entrenado.
 
 Lo que ocurre al añadir una masa es que la posición de equilibrio del dron, en vez de estar en el entorno de la altura deseada, esta se situa por debajo. Esto es coherente si pensamos en que realmente con este modelo es como si un operador aprende a volar un dron memorizando que posiciones del control de potencia hay que usar en cada situación. O sea que si está en tal posición y velocidad, pues se mueve hasta tal posición. Si esta por debajo, sabe que tiene que poner tal potencia, pero si esa potencia no es superior que la necesaria para compensar la masa adicional, pues simplemente no subirá. Una operador normal, lo que haría sería simplemente aumentar algo más la potencia para subir.
-
-

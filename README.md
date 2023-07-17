@@ -40,6 +40,13 @@ Se permite que el movimiento sea en 2D, con lo que tenemos control de fuerza y o
 
 👉 Ampliar esto en [Entrenamiento 2D](./wiki/aproximacion2D.md)
 
+### Uso de algoritmos de genética
+
+Se usan tareas en paralelo y genética para mejorar el aprendizaje.
+
+👉 Ampliar esto en [Genética](./wiki/usoGenetica.md)
+
+
 #### Jurado para las recompensas
 
 Para valorar la recompensa asignada a un estado, se creó una clase llamada *TReward*. La forma actual para calcular la recompensa, es calcular una posición proyectada, que consiste en la posición actual, a la que se le añade la velocidad. Con esta posición proyectada, entonces se obtiene el valor recompensa de forma lineal y mayor cuanto más cerca se encuentre de la altura objetivo.
@@ -55,13 +62,15 @@ Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente q
 ## Ruta
 
 * Entrenar la red para movimiento en 3D en el espacio
-* Manipulación de la red neuronal
-  * Persistencia entre ejecuciones
+* 🏗️ Manipulación de la red neuronal
+  * 🚧 Persistencia entre ejecuciones
   * Comprobar si una red entrenada, se puede reusar para otra red ligeramente diferente, y supone alguna ventaja.
-* Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
-  * Usar WebWorkers para poder realizar entrenamiento simultaneo de varios drones.
+* 🏗️ Añadir algoritmos geneticos para mejorar algunas caracteristicas como precisión del aprendizaje, rapidez u optimización de los movimientos para conseguir algo, que simplemente usando recomensas de individuo simple son más dificiles de modelizar.
+  * 🚧Usar WebWorkers para poder realizar entrenamiento simultaneo de varios drones. [💊 info web workers](./wiki/usoGenetica.md#web-workers)
   * Sistema de pruebas comunes a multiples candidatos para poder valorar cuales son los mejores.
 * Añadir otra red que permita al dron indicar cual es a su vez el target deseado, por ejemplo para poder "planificar" rutas o evitar obstaculos.
+
+
 
 ## Readme por defecto
 

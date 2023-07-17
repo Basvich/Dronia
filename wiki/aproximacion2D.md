@@ -18,7 +18,6 @@ En este caso, necesitamos 2 conjuntos de valores, uno para la fuerza como antes,
 
 > 💡 Se ponen mas variables de salida a la red neuronal, con lo que realmente tenemos un array de salida de posibles recomensas, pero lo que hacemos es que somos nosotros lo que interpretamos las 3 primeras posiciones del array como las desadas para manejar la fuerza, y las 3 siguientes para manejar el cabeceo. En cada grupo de ellos se escoje el indice que apunta al resultado que tenga la mayor recompensa.
 
-
 ## Recompensas
 
 Se usa el mismo algoritmo que en 1D, aunque generalizado a 3D. Como distancia se usa la distancia manhatan simplemente para ahorrar cálculo, y no parece que sea una penalización que influya.
@@ -44,7 +43,6 @@ Para que pueda converger algo la red (dependiendo de su complejidad), se necesit
 Una de las tipicas cosas que quizás no pensamos, son las soluciones que se van viendo, y que torpedean las ideas previas que teníamos. Una cosa que aprende relativamente rápido la red es que pone ponerse a girar en un sentido, no es tan malo como puede parecer.
 
 Al ponerse a girar el dron, acaba realizando circulos pequeños, y puede mantenerse recibiendo mayor recompensa que quizas apuntar en alguna dirección y volar hacía ahí, ya que acaba cayendo más lentamente. Puede llevar muchisimos ciclos de entrenamiento conseguir que el dron aprenda a salir de esas volteretas apuntando mas o menos al target, y que aprenda que esa salida es mejor que dar vueltas.
-
 
 ### Obtener NAN en la obtención de los datos de loss
 

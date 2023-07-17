@@ -34,7 +34,10 @@
               "src/styles.scss"
             ],
             "scripts": [],
-            "allowedCommonJsDependencies": ["lodash"]
+            "allowedCommonJsDependencies": [
+              "lodash"
+            ],
+            "webWorkerTsConfig": "tsconfig.worker.json"
           },
           "configurations": {
             "production": {
@@ -99,7 +102,8 @@
               "src/styles.scss"
             ],
             "scripts": [],
-            "karmaConfig": "karma.conf.js"
+            "karmaConfig": "karma.conf.js",
+            "webWorkerTsConfig": "tsconfig.worker.json"
           }
         },
         "lint": {

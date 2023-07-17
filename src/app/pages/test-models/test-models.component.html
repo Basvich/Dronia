@@ -1,8 +1,9 @@
 <div class="container">
   <div>
-    <button mat-button color="primary" (click)="handleCreateModel()">create model</button>
-    <button [disabled]="!model" mat-button color="primary" (click)="handleTrainModel()">train model</button>
-    <button [disabled]="!model" mat-button color="primary" (click)="handleTestModel()">test model</button>
+    <button mat-button color="primary" (click)="handleCreateModel()" matTooltip="Crea un modelo"  >create model</button>
+    <button [disabled]="!model" mat-button color="primary" (click)="handleTrainModel()" matTooltip="Lo entrena con unos datos">train model</button>
+    <button [disabled]="!model" mat-button color="primary" (click)="handleTestModel()" matTooltip="Prueba con unos datos">test model</button>
+    <button [disabled]="!model" mat-button color="primary" (click)="serializeDeserializeModel()" matTooltip="Deserializa y vuelve a serializar el modelo">test serialize model</button>
   </div>
   <div></div>
 </div>

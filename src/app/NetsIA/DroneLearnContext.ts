@@ -28,6 +28,8 @@ export interface LearnInfo{
   cicleCount: number,
   /**Perdida de lo probado sobre lo entrenado */
   loss: number,
+  /**Media de los ultimos datos de premio */
+  reward?: number,
   /** Cuantos pasos en el ciclo hubo para simular */
   stepsCount:number
  }

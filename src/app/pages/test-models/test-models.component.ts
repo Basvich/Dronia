@@ -9,6 +9,16 @@ interface IData1{
   reward:number[][] | number[];
 }
 
+interface ITensorFloat{
+  data:Float32Array;
+  shape:number[];
+}
+
+interface IDataModelSerial{
+  weights: ITensorFloat[];
+}
+
+
 @Component({
   selector: 'app-test-models',
   templateUrl: './test-models.component.html',
@@ -34,7 +44,7 @@ export class TestModelsComponent {
 
   public handleTestModel(){
     this.testModelData1();//this.testModelDataSimpleLinear();
-    this.testModelData1b()
+    this.testModelData1b();
   } 
 
   public createDataToLearn():IData1{
@@ -193,6 +203,13 @@ export class TestModelsComponent {
     return tf.tidy(() => this.model?.predict(states)) as tf.Tensor2D;
   }
 
+  public serializeDeserializeModel(){
+    if(!this.model) return;
+    const ss=this.serializeModel(this.model);
+    this.loadSerializeInModel(this.model, ss);
+    console.log('--------- OK deserializacion ---------')
+  }
+
   private CreateModel1():tf.Sequential{    
     const hiddenLayerSizes = [20, 20];        
     const network = tf.sequential();
@@ -246,4 +263,25 @@ export class TestModelsComponent {
     return model;
   }
 
+  private serializeModel(model: tf.LayersModel): IDataModelSerial{
+    const ws=model.getWeights(true);
+    const res:ITensorFloat[] =[];
+    for(const w of ws){
+      const data=w.dataSync() as Float32Array;  
+      const shape=w.shape;   
+      res.push({data,shape});
+    }
+    //ws.forEach((w)=>w.dispose());
+    return {weights:res};
+  }
+
+  private loadSerializeInModel(destModel: tf.LayersModel, data:IDataModelSerial ){
+    const weights: Array<tf.Tensor<tf.Rank>> =[];
+    for(const f of data.weights){
+      const w=tf.tensor(f.data, f.shape);
+      weights.push(w);
+    }
+    destModel.setWeights(weights);
+    //weights.forEach((w)=>w.dispose());
+  }
 }

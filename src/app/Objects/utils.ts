@@ -1,8 +1,14 @@
+import { ILearnContextSerialized } from "../NetsIA/DroneLearn3DContext";
 
 /** Si la clase necesita que se llame a dispose obligatoriamente */
 export interface IDisposable{
   /* función a llamar (manualmente....) */
   dispose: ()=>void;
+}
+
+export interface ISerializable{
+  getSerializedState: ()=>unknown;
+  loadSerializedState: (state:unknown)=>void;
 }
 
 export class Random {

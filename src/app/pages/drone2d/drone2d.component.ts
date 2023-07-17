@@ -134,7 +134,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
         loss: lastLoss(r.history),
         stepsCount: r.steps
       });
-      if(infos.length===10){
+      if(infos.length===10){  //Para tener info granulada
         const nfo=createInfo(this.ciclesCount+i+1);
         this.learnCicleCount.next(nfo);
         infos.length=0;
@@ -202,7 +202,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public dispose() {
     if (this.droneLearnCtx) {
-      this.droneLearnCtx.Dispose();
+      this.droneLearnCtx.dispose();
       this.droneLearnCtx = undefined;
     }
     if (this.miniMenuGui) {
