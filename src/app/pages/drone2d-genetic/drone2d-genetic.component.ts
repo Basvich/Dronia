@@ -33,7 +33,7 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
   }
 
   testCreateStudents(){
-    for(let i=0; i<20; i++){
+    for(let i=0; i<10; i++){
       const n=new Student();
       n.name=`St_${i}`;
       this.students.push(n);

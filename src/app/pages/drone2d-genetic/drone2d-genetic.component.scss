@@ -42,10 +42,13 @@ mat-slider {
   width: 200px;
 }
 
-.mat-mdc-table {  
-  max-height: 500px;
+.students-table-container {
+  position: relative;
+  min-height: 200px;
+  max-height: 400px;
   overflow: auto;
 }
+
 
 .mockRender{
   flex-grow: 1;
