@@ -1,19 +1,24 @@
 import { Injectable } from '@angular/core';
-import Dexie from 'dexie';
+import Dexie, { PromiseExtended, Table } from 'dexie';
+import { IStudentState } from '../NetsIA/Students';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DbService extends Dexie {
+  studentItems!: Table<IStudentState, number>;
   constructor() {
-    super("DexieDB"); //database name 'DexieDB'
+    super("DroneStudents"); //database name 'DexieDB'
     this.version(1).stores({
-      myStore1: '++empId, empName, empSal', //'myStore1' table, 'empId' primary key
-      myStore2: 'compId, compName'          //'myStore2' table, 'compId' primary key
+      studentItems: '++id'
     });
 
-    this.open()                             //opening the database
+   /*  this.open()                             //opening the database
     .then(data => console.log("DB Opened"))
-    .catch(err => console.log(err.message));  
+    .catch(err => console.log(err.message));   */
+  }
+   
+  saveStudent(state: IStudentState): PromiseExtended<number>{
+    return this.studentItems.add(state);
   }
 }

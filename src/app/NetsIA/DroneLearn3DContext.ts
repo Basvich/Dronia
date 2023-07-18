@@ -13,9 +13,18 @@ const MaxSteps = 1000;
 /** El mínimo de samples que queremos para poder entrenar la red */
 const MinNumSamples = 1000;
 
+export interface ITensorFloat{
+  data:Float32Array;
+  shape:number[];
+}
+
+export interface IDataModelSerial{
+  weights: ITensorFloat[];
+}
+
 export interface ILearnContextSerialized{
   /** Los datos del modelo de la red */
-  modelRN:unknown;
+  modelRN:IDataModelSerial;
 }
 
 export class DroneLearn3DContext implements ISerializable, IDisposable {
@@ -322,7 +331,9 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
 
   /** Devuelve un objeto con el estado, que permite volver a recrearlo */
   public getSerializedState():ILearnContextSerialized{
-    const res:ILearnContextSerialized={ modelRN:{}};
+    if(!this.NetModel.model) throw new Error("Undefinded net model");
+    const model=DroneLearn3DContext.serializeModel(this.NetModel.model);
+    const res:ILearnContextSerialized={ modelRN:model};    
     return res;
   }
 
@@ -332,7 +343,9 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
    */
   public loadSerializedState(state:unknown){
     const st=state as ILearnContextSerialized;
-
+    if(!st) throw new Error("Invalid serialized state");
+    if(!this.NetModel.model) throw new Error("Undefinded net model");
+    DroneLearn3DContext.loadSerializeInModel(this.NetModel.model, st.modelRN);
   }
 
   public dispose() {
@@ -452,6 +465,28 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
     const sum = d.reduce((a, b) => a + b, 0);
     const avg = (sum / d.length) || 0;
     return avg;
+  }
+
+  private static serializeModel(model: tf.LayersModel): IDataModelSerial{
+    const ws=model.getWeights(true);
+    const res:ITensorFloat[] =[];
+    for(const w of ws){
+      const data=w.dataSync() as Float32Array;  
+      const shape=w.shape;   
+      res.push({data,shape});
+    }
+    //ws.forEach((w)=>w.dispose());
+    return {weights:res};
+  }
+
+  private static loadSerializeInModel(destModel: tf.LayersModel, data:IDataModelSerial ){
+    const weights: Array<tf.Tensor<tf.Rank>> =[];
+    for(const f of data.weights){
+      const w=tf.tensor(f.data, f.shape);
+      weights.push(w);
+    }
+    destModel.setWeights(weights);
+    //weights.forEach((w)=>w.dispose());
   }
 
 }

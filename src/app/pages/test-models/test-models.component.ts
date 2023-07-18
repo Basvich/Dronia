@@ -1,5 +1,6 @@
 import { Component, IterableDiffers } from '@angular/core';
 import * as tf from '@tensorflow/tfjs';
+import { IDataModelSerial, ITensorFloat } from 'src/app/NetsIA/DroneLearn3DContext';
 import * as THREE from 'three';
 
 
@@ -9,14 +10,7 @@ interface IData1{
   reward:number[][] | number[];
 }
 
-interface ITensorFloat{
-  data:Float32Array;
-  shape:number[];
-}
 
-interface IDataModelSerial{
-  weights: ITensorFloat[];
-}
 
 
 @Component({

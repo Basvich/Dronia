@@ -6,7 +6,9 @@ import { DroneLearn3DContext, ILearnContextSerialized } from "./DroneLearn3DCont
 import { ModelDron2D } from "./ModelIA1D";
 
 export interface IStudentState{
-  name:string;
+  /** Id único para usar en la BD */
+  id:number;
+  name:string;  
   learnCicles:number;
   score:number;
   /** básicamente los resultados de reward del aprendizaje */
@@ -23,6 +25,7 @@ export enum StudentStatus{
 export class Student  implements ISerializable,IDisposable {  
   drone: TDrone3D;
   learnContext?: DroneLearn3DContext ;
+  public id=0;
   public name="None";
   /** básicamente los resultados de reward del aprendizaje */
   public reward=0;
@@ -49,6 +52,7 @@ export class Student  implements ISerializable,IDisposable {
   getSerializedState():IStudentState{
     if(!this.learnContext) throw new Error('missing learn context');
     const res:IStudentState={
+      id: this.id,
       name: this.name,
       score:this.score,
       reward:this.reward,
@@ -62,6 +66,7 @@ export class Student  implements ISerializable,IDisposable {
   loadSerializedState(state: unknown){
     if(!this.learnContext) throw new Error('missing learn context');    
     const st=state as IStudentState;
+    this.id=st.id;
     this.score=st.score;
     this.reward=st.reward;
     this.loss=st.loss;

@@ -7,6 +7,7 @@ import { Student,EnumIntToDescriptionPipe, StudentStatus } from 'src/app/NetsIA/
 import { Random } from 'src/app/Objects/utils';
 import { HelloWorkerService } from 'src/app/services/HelloWorkerSrv';
 import { LearnWorkerService, SatusWorking, TestLimitedWorkers } from 'src/app/services/LearnWorkerSrv';
+import { DbService } from 'src/app/services/db.service';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 
 
@@ -15,7 +16,7 @@ import { ThreeRenderComponent } from 'src/app/three-render/three-render.componen
   templateUrl: './drone2d-genetic.component.html',
   styleUrls: ['./drone2d-genetic.component.scss']
 })
-export class Drone2dGeneticComponent implements AfterViewInit  {  
+export class Drone2dGeneticComponent implements AfterViewInit  {
   limitedWorkers?: TestLimitedWorkers;
   miniMenuGui?: GUI;
   displayedColumns: string[] = ['name', 'loss', 'score', 'reward', 'status', 'cicles'];
@@ -26,14 +27,14 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
   @ViewChild(MatTable) table!: MatTable<Student>;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  constructor(private helloService: HelloWorkerService, private workerSrv: LearnWorkerService){}
+  constructor(private helloService: HelloWorkerService, private workerSrv: LearnWorkerService, private db: DbService){}
 
   ngAfterViewInit(): void {
     this.dsStudents.paginator = this.paginator;
   }
 
   testCreateStudents(){
-    for(let i=0; i<10; i++){
+    for(let i=0; i<5; i++){
       const n=new Student();
       n.name=`St_${i}`;
       this.students.push(n);
@@ -103,4 +104,22 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
       }
     );
   }
+
+  loadStudents() {
+    this.db.table('myStore1').get
+    }
+  async saveStudents() {
+    /* const data={
+      empName: 'Basi pollo', 
+      empSal: 1002,
+      films:["life of Brian", "Mean of life"]
+    };
+    this.db.table('myStore1')
+    .add(data)
+    .then((data) => console.log(data))
+    .catch((err) => console.log(err.message));*/
+    const ss=this.students[0].getSerializedState();
+    const r=await this.db.saveStudent(ss);
+  } 
+
 }
