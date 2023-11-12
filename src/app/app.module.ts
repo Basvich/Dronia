@@ -1,4 +1,5 @@
 import { NgModule } from '@angular/core';
+import {FormBuilder, Validators, FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -10,7 +11,6 @@ import { ThreeRenderComponent } from './three-render/three-render.component';
 import { LearnGraphComponent } from './Dlg/learn-graph/learn-graph.component';
 import { Drone1DComponent } from './graph/drone1-d/drone1-d.component';
 import { NgChartsModule } from 'ng2-charts';
-import { FormsModule } from '@angular/forms';
 import { Drone1AcurrateComponent } from './graph/drone1-acurrate/drone1-acurrate.component';
 import { TestModelsComponent } from './pages/test-models/test-models.component';
 import { BasicScene2Component } from './pages/basic-scene2/basic-scene2.component';
@@ -39,7 +39,8 @@ import { Drone2dGeneticComponent } from './pages/drone2d-genetic/drone2d-genetic
     AppRoutingModule,
     BrowserAnimationsModule,    
     NgChartsModule,
-    FormsModule
+    FormsModule,
+    ReactiveFormsModule
   ],
   providers: [],
   bootstrap: [AppComponent]

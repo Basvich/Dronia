@@ -9,7 +9,11 @@ export enum SatusWorking{
 
 export interface ResultWorking<T>{
   value:T,
-  status:SatusWorking
+  status:SatusWorking,
+  nfo?:{
+    count:number,
+    pending:number
+  }
 }
 
 
@@ -70,27 +74,27 @@ export class LearnWorkerService {
   }
 
   public CicleLeanrStudents3(input$: Observable<Student>): Observable<ResultWorking<Student>>{
-    const limitedWorkers=new LimitedWorkers();
+    const limitedWorkers=new LimitedWorkers<LearnWorkerProxy>(LearnWorkerProxy);
     let c=0;
     let pending=0;
-    let closedZipped=false;
-    const zipped=zip(limitedWorkers.LimitedConcurrent(), input$);
+    let closedZipped=false;   
     let clientSubscriber: Subscriber<ResultWorking<Student>> | undefined=undefined;
     const res$=new Observable<ResultWorking<Student>>((subscriber)=>{
       clientSubscriber=subscriber;
-    });
+      const zipped=zip(limitedWorkers.LimitedConcurrent(), input$);
     zipped.subscribe({
-      next(value){
+      next(value: [LearnWorkerProxy, Student]){        
         c++;
         pending++;
+        console.log(`[LearnWorkerService] zipped.next -> "${value[1].name}" ${value[1].statusStr} c: ${c} pending: ${pending}`);
         if(clientSubscriber && !clientSubscriber.closed){
-          clientSubscriber?.next({value:value[1], status:SatusWorking.working});
-        }
+          clientSubscriber.next({value:value[1], status:SatusWorking.working, nfo:{count:c, pending}});
+        } else console.log('No clientSubscriber');
         value[0].DoWork(value[1]).then((res)=>{
           pending--;
           if(clientSubscriber){
             if(!clientSubscriber.closed){
-              clientSubscriber.next({value:res, status:SatusWorking.finished});
+              clientSubscriber.next({value:res, status:SatusWorking.finished, nfo:{count:c, pending}});
             }
           }          
           limitedWorkers.FreeOne();
@@ -121,6 +125,8 @@ export class LearnWorkerService {
         console.log('Error',msg);
       }
     });
+    });
+    
     return res$;
   }
  
@@ -137,10 +143,14 @@ export class LearnWorkerService {
   }  
 }
 
-/** Wraper entorno al worker para convertir una petición de trabajo del worker
- * en una promesa
+export interface IWorkerStudent extends Object{
+  DoWork(student: Student):Promise<Student>;
+}
+
+/** Wraper entorno al web worker, para convertir una petición de trabajo del worker
+ * en una promesa. Se usa serialización de estados  y paso de mensajes
  */
-class LearnWorkerProxy{
+class LearnWorkerProxy implements IWorkerStudent{
   private worker? :Worker;
   public DoWork(student: Student):Promise<Student>{
     return new Promise((resolve, reject)=>{
@@ -173,12 +183,16 @@ class LearnWorkerProxy{
 /** Sirve para ir proporcionando observables con un maximo de simultaneos.
  * Sirve para limitar el número máximo de tareas simultáneas
  */
-class LimitedWorkers{
-  private currentWorkers:Array<LearnWorkerProxy> =[];
+export  class LimitedWorkers<T extends IWorkerStudent>{
+  private currentWorkers:Array<T> =[];
   private disponibleWorkers=3;
-  private subscriber?: Subscriber<LearnWorkerProxy>;
+  private subscriber?: Subscriber<T>;
 
-  public LimitedConcurrent(max?:number): Observable<LearnWorkerProxy> {
+  constructor (private fact: { new (): T }){
+
+  }
+
+  public LimitedConcurrent(max?:number ): Observable<T> {
     if(max) this.disponibleWorkers=max;
     return new Observable((subscriber)=>{
       this.subscriber=subscriber;
@@ -189,9 +203,15 @@ class LimitedWorkers{
   private publishAllDisponibles(){
     while(this.subscriber && this.disponibleWorkers>0 && !this.subscriber.closed){
       this.disponibleWorkers-=1;
-      const nWorker=new LearnWorkerProxy();
+      const nWorker= this.create(this.fact);//this.fact();//new LearnWorkerProxy();
+      //const aaa=this.create(LearnWorkerProxy);
       this.subscriber.next(nWorker);        
     }  
+  }
+
+  /** Mantengo esto como referencia para usar como ejemplo de una función que pasandole un tipo, llamaría al constructor*/
+  private create<T>(c: { new (): T }): T {
+    return new c();
   }
 
   public FreeOne(){

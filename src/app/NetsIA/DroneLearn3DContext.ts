@@ -27,6 +27,15 @@ export interface ILearnContextSerialized{
   modelRN:IDataModelSerial;
 }
 
+export interface ISimulateCfg{
+  pos:[x:number, y:number, z:number],
+  vel?:[x:number, y:number, z:number],
+  /** Máximo numero de pasos */
+  maxSteps?:number,
+  /** Si se alcanza esta mínima recompensa, salimos */
+  minReward?:number
+}
+
 export class DroneLearn3DContext implements ISerializable, IDisposable {
   /** El tiempo prefijado de cada salto de simulación */
   private LapseSegCicle = 0.1;
@@ -304,6 +313,46 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
       isInside = this.IsInBoundLimits(this.drone);
       isDone = this.jury.IsDone(this.drone);
       histRewards.push(reward);
+    }
+    let lastReward = 0;
+    if (!isInside) {
+      lastReward = this.jury.badReward;
+    } else if (isDone) {
+      lastReward = isDone;
+    } else lastReward += this.jury.badMiniReward;
+    lastReward += reward;
+    histRewards[histRewards.length - 1] = lastReward;
+    const mean = DroneLearn3DContext.mean(histRewards, 100);
+    const res = { stepCount, lastReward, mean };
+    return res;
+  }
+
+  /**Simula un ciclo a partir de las condiciones iniciales o hasta que se cumpla alguna de las condiciones */
+  public simulateCicleExt(opt:ISimulateCfg): { stepCount: number; lastReward: number; mean: number } {
+    this.drone.Reset(); //Partimos de la misma posición...
+    this.drone.Position.set(opt.pos[0], opt.pos[1], opt.pos[2]);
+    const v0=opt.vel??[0,0,0];
+    this.drone.Velocity.set(v0[0], v0[1], v0[2]);
+    const maxSteps=opt.maxSteps??MaxSteps;
+    const minReward=opt.minReward??-100000;
+    let isDone = 0;
+    let isInside = true;
+    let stepCount = 0;
+    let reward = 0;
+    const histRewards = [];
+    while (stepCount < maxSteps && !isDone && isInside) {
+      const droneState = this.adapter.getStateTensor();
+      const r = this.rnModel.predict(droneState);
+      droneState.dispose();
+      this.adapter.setControlData(r);
+      r?.dispose();
+      this.drone.Simulate(this.LapseSegCicle);
+      reward = this.jury.InstanReward(this.drone);
+      stepCount++;
+      isInside = this.IsInBoundLimits(this.drone);
+      isDone = this.jury.IsDone(this.drone);
+      histRewards.push(reward);
+      if(reward<=minReward) break;
     }
     let lastReward = 0;
     if (!isInside) {

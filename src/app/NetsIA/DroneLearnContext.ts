@@ -177,6 +177,12 @@ export class DroneLearnContext {
     return res;
   }
 
+  /**
+   * Parte de una posición indicada, y lo simula hasta que se sale
+   * @param posY 
+   * @param velY 
+   * @returns 
+   */
   public simulateCicle(posY: number, velY: number): { stepCount: number; lastReward: number; mean: number } {
     this.drone.Reset(); //Partimos de la misma posición...
     this.drone.Position.set(0, posY, 0);

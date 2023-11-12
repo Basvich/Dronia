@@ -8,11 +8,12 @@ import * as tf from '@tensorflow/tfjs';
 
 
 addEventListener('message', async ({ data }) => {
-  console.log(`[learn.worker] Recibido ${data.name}`);
+  console.log(`[learn.worker] Recibido para trabajar: "${data.name}" `);
   const learnr=new learnWorker(data);
   await learnr.learnCicles(); //learnr.learnCiclesTest();
   const nState=learnr.getState();
   learnr.dispose();
+  console.log(`[learn.worker] acabó ciclo: "${data.name}" `);
   postMessage(nState);
   close();
 });
@@ -21,13 +22,14 @@ class learnWorker implements IDisposable{
   private student:Student;
    /** Probabilidad en cada paso de seleccionar un valor aleatorio */
   exploracionFactor = 0.05;
-  numCicles=10;
+  numCicles=3;
   constructor(public state:IStudentState){
     this.student=new Student();   
     this.student.loadSerializedState(state);
   }
   
 
+  /** Para simular un proceso cualquiera consumiendo tiempo */
   public learnCiclesTest(){
     const start = Date.now();
     const segs=Random.next(2000,6000);
@@ -55,7 +57,9 @@ class learnWorker implements IDisposable{
         stepsCount: r.steps
       });
       this.student.learnCicles+=1;
+      console.log(`[learn.Worker] '${this.student.name}' ciclo ${i} finalizado`);
     }
+    console.log(`[learn.Worker] '${this.student.name}' fin de ciclos`);
     const nfo=learnWorker.createInfo(infos, this.student.learnCicles );
     this.student.loss=nfo.loss;
     this.student.reward=nfo.reward??0;

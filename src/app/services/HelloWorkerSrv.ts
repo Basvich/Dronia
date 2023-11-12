@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+
+/** Simple clase para probar el concepto de un servicio que encapsule un web worker y como usarlo */
 @Injectable({
   providedIn: 'root'
 })
