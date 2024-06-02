@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 const framePeriod=0.04;
 
 @Component({
+  standalone: true,
   selector: 'app-three-render',
   templateUrl: './three-render.component.html',
   styleUrls: ['./three-render.component.scss']

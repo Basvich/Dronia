@@ -6,17 +6,21 @@ import { ICicle3DOptions, LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
 import { AdapterDrone2D } from 'src/app/NetsIA/AdapterDroneTf';
 import { ModelDron2D } from 'src/app/NetsIA/ModelIA1D';
 import GUI from 'lil-gui';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {MatSliderModule} from '@angular/material/slider';
 import { MinLapseTroller, Random } from 'src/app/Objects/utils';
 import { Subject } from 'rxjs';
 import * as THREE from 'three';
 import * as tf from '@tensorflow/tfjs';
 import { DroneLearn3DContext } from 'src/app/NetsIA/DroneLearn3DContext';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
+  standalone:true,
   selector: 'app-drone2d',
   templateUrl: './drone2d.component.html',
-  styleUrls: ['./drone2d.component.scss']
+  styleUrls: ['./drone2d.component.scss'],
+  imports: [MatSliderModule, MatSlideToggleModule,MatTooltipModule],
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   modelName='Model2D';

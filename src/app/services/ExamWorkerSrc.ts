@@ -107,7 +107,6 @@ class ExamineWorkerProxy implements IWorkerStudent{
     this.worker=undefined;
     if(this.onEnd) this.onEnd(this);
   }
-  onEnd?:(sender:LearnWorkerProxy)=>void;
-
+  onEnd?:(sender:ExamineWorkerProxy)=>void;
   
 }

@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ChartConfiguration, ChartOptions } from "chart.js";
-import { BaseChartDirective } from 'ng2-charts';
+import { BaseChartDirective, NgChartsModule } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
 
@@ -9,6 +10,8 @@ import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
  * Muestra para distintas velocidades del drone, las recompensas esperadas para cada posible acción
  */
 @Component({
+  standalone:true,
+  imports: [NgChartsModule, FormsModule],
   selector: 'app-drone1-d',
   templateUrl: './drone1-d.component.html',
   styleUrls: ['./drone1-d.component.scss']

@@ -1,20 +1,26 @@
 import { AfterViewInit, Component, ViewChild } from '@angular/core';
-import { MatPaginator } from '@angular/material/paginator';
-import { MatStepper } from '@angular/material/stepper';
-import { MatTable, MatTableDataSource } from '@angular/material/table';
 import {STEPPER_GLOBAL_OPTIONS} from '@angular/cdk/stepper';
 import GUI from 'lil-gui';
 import { from, take, tap } from 'rxjs';
-import { Student,EnumIntToDescriptionPipe, StudentStatus } from 'src/app/NetsIA/Students';
+import { Student,StudentStatus } from 'src/app/NetsIA/Students';
 import { Random } from 'src/app/Objects/utils';
 import { HelloWorkerService } from 'src/app/services/HelloWorkerSrv';
 import { LearnWorkerService, SatusWorking, TestLimitedWorkers } from 'src/app/services/LearnWorkerSrv';
 import { DbService } from 'src/app/services/db.service';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { ExamWorkerService } from 'src/app/services/ExamWorkerSrc';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { CommonModule } from '@angular/common';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
+import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/table';
 
 
 @Component({
+  standalone:true,
+  imports:[CommonModule, ThreeRenderComponent, MatProgressBarModule, MatExpansionModule, MatIconModule, MatPaginatorModule, MatStepperModule, MatTableModule],
   selector: 'app-drone2d-genetic',
   templateUrl: './drone2d-genetic.component.html',
   styleUrls: ['./drone2d-genetic.component.scss'],

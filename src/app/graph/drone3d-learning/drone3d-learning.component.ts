@@ -3,11 +3,15 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
+import { NgChartsModule } from 'ng2-charts';
 
 
 
 
 @Component({
+  standalone: true,  
+  providers: [],
+  imports: [NgChartsModule],
   selector: 'app-drone3d-learning',
   templateUrl: './drone3d-learning.component.html',
   styleUrls: ['./drone3d-learning.component.scss']
