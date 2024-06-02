@@ -71,12 +71,13 @@
         <mat-step label="Learning process" state="learn">
           <div>
             <button mat-flat-button color="primary" (click)="StudentsWorkingLearn()"
-              matTooltip="probar varios studiantes">Test students work</button>            
+              matTooltip="All students learn in parallel mode">Test students work</button>            
           </div>>
         </mat-step>
         <mat-step label="Evaluations" state="eval" [editable]="false">
           <div>
-            <span>Examenes</span>
+            <button mat-flat-button color="primary" (click)="StudentsWorkingExamination()"
+              matTooltip="Students pass multiple tests to assess their learning">Test students work</button>    
           </div>
         </mat-step>
         <mat-step label="Genetic changes" state="genetic"></mat-step>

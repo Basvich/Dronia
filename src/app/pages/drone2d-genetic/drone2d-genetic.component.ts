@@ -11,6 +11,7 @@ import { HelloWorkerService } from 'src/app/services/HelloWorkerSrv';
 import { LearnWorkerService, SatusWorking, TestLimitedWorkers } from 'src/app/services/LearnWorkerSrv';
 import { DbService } from 'src/app/services/db.service';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
+import { ExamWorkerService } from 'src/app/services/ExamWorkerSrc';
 
 
 @Component({
@@ -45,7 +46,7 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
   @ViewChild('stepper') private myStepper!: MatStepper;
 
 
-  constructor(private helloService: HelloWorkerService, private workerSrv: LearnWorkerService, private db: DbService){}
+  constructor(private helloService: HelloWorkerService, private learnWorkerSrv: LearnWorkerService, private examWorkerSrv: ExamWorkerService, private db: DbService){}
 
   ngAfterViewInit(): void {
     this.dsStudents.paginator = this.paginator;
@@ -84,11 +85,10 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
     const thats=this;
     const numStudents=this.students.length;
     this.setProgress(0, numStudents);
-    const obs$=from(this.students).pipe(tap((s)=>{
-      console.log(`tap: "${s.name}"`);
+    const obs$=from(this.students).pipe(tap((s)=>{      
       s.status=StudentStatus.enqueue;
     }));
-    this.workerSrv.CicleLeanrStudents3(obs$).subscribe(
+    this.learnWorkerSrv.CicleLeanrStudents3(obs$).subscribe(
       {
         next(value){
           console.log(`[Drone2dGenetic] StudentsWorkingLearn() Rx proceso name: "${value.value.name}" - status: "${SatusWorking[value.status]}"`);
@@ -116,9 +116,17 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
     );
   }
 
+  StudentsWorkingExamination(){
+    this.isExaming=true;
+    const thats=this;
+    const numStudents=this.students.length;
+    this.setProgress(0, numStudents);
+    //this.examWorkerSrv.CicleExamineStudents();    
+  }
+
   testWorkStudent(){
     console.log('[Drone2dGenetic] testWorkStudent()');
-    const res=this.workerSrv.CicleLearnStudents(this.students);
+    const res=this.learnWorkerSrv.CicleLearnStudents(this.students);
     res.subscribe(
       {
         next: (student)=>{
@@ -148,7 +156,7 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
 
   test3(){
     const obs$=from(this.students).pipe(tap((s)=>s.status=StudentStatus.enqueue));
-    this.workerSrv.CicleLeanrStudents3(obs$).subscribe(
+    this.learnWorkerSrv.CicleLeanrStudents3(obs$).subscribe(
       {
         next(value){
           console.log(`Rx proceso ${value.value.name} - ${value.status}`);
@@ -169,7 +177,7 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
   }
 
   loadStudents() {
-    this.db.table('myStore1').get
+   // this.db.table('myStore1').get
     }
   async saveStudents() {
     /* const data={
