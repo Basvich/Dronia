@@ -70,6 +70,10 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
     }, 1000);    
   }
 
+  test2CreateStudents(){
+    for(let i=0; i<10; i++){
+  }
+
   testHelloWorker(){
     /* if (typeof Worker !== 'undefined') {
       const worker = new Worker(new URL('../../workers/hello.worker', import.meta.url));
