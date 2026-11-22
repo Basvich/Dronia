@@ -62,6 +62,15 @@
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
+            },
+            "testing": {
+              "aot": false,
+              "optimization": false,
+              "extractLicenses": false,
+              "polyfills": [
+                "zone.js",
+                "zone.js/testing"
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -85,25 +94,18 @@
           }
         },
         "test": {
-          "builder": "@angular/build:karma",
+          "builder": "@angular/build:unit-test",
           "options": {
-            "polyfills": [
-              "zone.js",
-              "zone.js/testing"
-            ],
             "tsConfig": "tsconfig.spec.json",
-            "inlineStyleLanguage": "scss",
-            "assets": [
-              "src/favicon.ico",
-              "src/assets"
+            "reporters": [
+              "default"
             ],
-            "styles": [
-              "@angular/material/prebuilt-themes/deeppurple-amber.css",
-              "src/styles.scss"
+            "coverageReporters": [
+              "html",
+              "text-summary"
             ],
-            "scripts": [],
-            "karmaConfig": "karma.conf.js",
-            "webWorkerTsConfig": "tsconfig.worker.json"
+            "buildTarget": ":build:testing",
+            "runner": "vitest"
           }
         }
       }

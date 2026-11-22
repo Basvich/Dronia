@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { MatSlideToggleChange } from '@angular/material/slide-toggle';
 import GUI from 'lil-gui';
 import { Subject } from 'rxjs';
@@ -20,6 +20,7 @@ import { Model1D2 } from 'src/app/NetsIA/ModelIA1D';
     selector: 'app-basic-scene2',
     templateUrl: './basic-scene2.component.html',
     styleUrls: ['./basic-scene2.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class BasicScene2Component extends BasicSceneBase implements OnInit, AfterViewInit, OnDestroy { 

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, Input, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, Input, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
@@ -13,6 +13,7 @@ import { NgChartsModule } from 'ng2-charts';
     imports: [NgChartsModule],
     selector: 'app-drone3d-learning',
     templateUrl: './drone3d-learning.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
     styleUrls: ['./drone3d-learning.component.scss']
 })
 export class Drone3dLearningComponent {

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { TDrone3D, TTargetDrone } from 'src/app/Objects/Drone3D';
 import { TDroneMesh, TTargetMesh } from 'src/app/Objects/TDroneMesh';
@@ -19,6 +19,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
     selector: 'app-drone2d',
     templateUrl: './drone2d.component.html',
     styleUrls: ['./drone2d.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     imports: [MatSliderModule, MatSlideToggleModule, MatTooltipModule]
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {

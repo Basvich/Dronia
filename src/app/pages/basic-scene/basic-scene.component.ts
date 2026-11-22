@@ -1,4 +1,4 @@
-import { Component, OnDestroy, ViewChild } from '@angular/core';
+import { Component, OnDestroy, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import * as THREE from 'three';
 import { Model1D } from '../../NetsIA/ModelIA1D';
 import { TReward } from '../../NetsIA/TRewards';
@@ -22,6 +22,7 @@ const Limits = {
     selector: 'app-basic-scene',
     templateUrl: './basic-scene.component.html',
     styleUrls: ['./basic-scene.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class BasicSceneComponent  extends BasicSceneBase  implements OnDestroy {  

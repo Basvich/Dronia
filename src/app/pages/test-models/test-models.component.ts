@@ -1,4 +1,4 @@
-import { Component, IterableDiffers } from '@angular/core';
+import { Component, IterableDiffers, ChangeDetectionStrategy } from '@angular/core';
 import * as tf from '@tensorflow/tfjs';
 import { IDataModelSerial, ITensorFloat } from 'src/app/NetsIA/DroneLearn3DContext';
 import * as THREE from 'three';
@@ -17,6 +17,7 @@ interface IData1{
     selector: 'app-test-models',
     templateUrl: './test-models.component.html',
     styleUrls: ['./test-models.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     standalone: false
 })
 export class TestModelsComponent {

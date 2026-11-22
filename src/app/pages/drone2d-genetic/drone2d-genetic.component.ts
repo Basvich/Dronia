@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import {STEPPER_GLOBAL_OPTIONS} from '@angular/cdk/stepper';
 import GUI from 'lil-gui';
 import { from, take, tap } from 'rxjs';
@@ -23,6 +23,7 @@ import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/
     selector: 'app-drone2d-genetic',
     templateUrl: './drone2d-genetic.component.html',
     styleUrls: ['./drone2d-genetic.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
     providers: [{
             provide: STEPPER_GLOBAL_OPTIONS,
             useValue: { displayDefaultIndicatorType: false },
