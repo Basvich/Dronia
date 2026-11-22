@@ -75,30 +75,28 @@ export class LearnWorkerService {
 
   public CicleLeanrStudents3(input$: Observable<Student>): Observable<ResultWorking<Student>>{
     const limitedWorkers=new LimitedWorkers<LearnWorkerProxy>(LearnWorkerProxy);
-    let c=0;
-    let pending=0;
-    let closedZipped=false;   
+    const state = { c: 0, pending: 0, closedZipped: false };
     let clientSubscriber: Subscriber<ResultWorking<Student>> | undefined=undefined;
     const res$=new Observable<ResultWorking<Student>>((subscriber)=>{
       clientSubscriber=subscriber;
       const zipped=zip(limitedWorkers.LimitedConcurrent(), input$);
     zipped.subscribe({
       next(value: [LearnWorkerProxy, Student]){        
-        c++;
-        pending++;
-        console.log(`[LearnWorkerService] zipped.next -> "${value[1].name}" ${value[1].statusStr} c: ${c} pending: ${pending}`);
+        state.c++;
+        state.pending++;
+        console.log(`[LearnWorkerService] zipped.next -> "${value[1].name}" ${value[1].statusStr} c: ${state.c} pending: ${state.pending}`);
         if(clientSubscriber && !clientSubscriber.closed){
-          clientSubscriber.next({value:value[1], status:SatusWorking.working, nfo:{count:c, pending}});
+          clientSubscriber.next({value:value[1], status:SatusWorking.working, nfo:{count:state.c, pending:state.pending}});
         } else console.log('No clientSubscriber');
         value[0].DoWork(value[1]).then((res)=>{
-          pending--;
+          state.pending--;
           if(clientSubscriber){
             if(!clientSubscriber.closed){
-              clientSubscriber.next({value:res, status:SatusWorking.finished, nfo:{count:c, pending}});
+              clientSubscriber.next({value:res, status:SatusWorking.finished, nfo:{count:state.c, pending:state.pending}});
             }
           }          
           limitedWorkers.FreeOne();
-          if(pending<=0){
+          if(state.pending<=0){
             if(clientSubscriber){
               clientSubscriber.complete();
               clientSubscriber=undefined;
@@ -114,8 +112,8 @@ export class LearnWorkerService {
         });
       },
       complete(){
-        console.log(`Zipped complete c:${c}`);
-        closedZipped=true;
+        console.log(`Zipped complete c:${state.c}`);
+        state.closedZipped=true;
         /* if(clientSubscriber){
           clientSubscriber.complete();
           clientSubscriber=undefined;
