@@ -19,9 +19,10 @@ const Limits = {
 };
 
 @Component({
-  selector: 'app-basic-scene',
-  templateUrl: './basic-scene.component.html',
-  styleUrls: ['./basic-scene.component.scss']
+    selector: 'app-basic-scene',
+    templateUrl: './basic-scene.component.html',
+    styleUrls: ['./basic-scene.component.scss'],
+    standalone: false
 })
 export class BasicSceneComponent  extends BasicSceneBase  implements OnDestroy {  
   private lastTimestap = 0;  

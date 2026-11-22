@@ -83,7 +83,8 @@ export class Student  implements ISerializable,IDisposable {
 }
 
 @Pipe({
-  name: 'enumIntToDescription',
+    name: 'enumIntToDescription',
+    standalone: false
 })
 export class EnumIntToDescriptionPipe implements PipeTransform {
   // enum object on which you want this pipe to work

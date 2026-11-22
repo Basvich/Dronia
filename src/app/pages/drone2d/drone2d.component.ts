@@ -16,11 +16,10 @@ import { DroneLearn3DContext } from 'src/app/NetsIA/DroneLearn3DContext';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 @Component({
-  standalone:true,
-  selector: 'app-drone2d',
-  templateUrl: './drone2d.component.html',
-  styleUrls: ['./drone2d.component.scss'],
-  imports: [MatSliderModule, MatSlideToggleModule,MatTooltipModule],
+    selector: 'app-drone2d',
+    templateUrl: './drone2d.component.html',
+    styleUrls: ['./drone2d.component.scss'],
+    imports: [MatSliderModule, MatSlideToggleModule, MatTooltipModule]
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   modelName='Model2D';

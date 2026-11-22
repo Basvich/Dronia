@@ -19,15 +19,14 @@ import { MatTable, MatTableDataSource, MatTableModule } from '@angular/material/
 
 
 @Component({
-  standalone:true,
-  imports:[CommonModule, ThreeRenderComponent, MatProgressBarModule, MatExpansionModule, MatIconModule, MatPaginatorModule, MatStepperModule, MatTableModule],
-  selector: 'app-drone2d-genetic',
-  templateUrl: './drone2d-genetic.component.html',
-  styleUrls: ['./drone2d-genetic.component.scss'],
-  providers:[ {
-    provide: STEPPER_GLOBAL_OPTIONS,
-    useValue: {displayDefaultIndicatorType: false},
-  }]
+    imports: [CommonModule, ThreeRenderComponent, MatProgressBarModule, MatExpansionModule, MatIconModule, MatPaginatorModule, MatStepperModule, MatTableModule],
+    selector: 'app-drone2d-genetic',
+    templateUrl: './drone2d-genetic.component.html',
+    styleUrls: ['./drone2d-genetic.component.scss'],
+    providers: [{
+            provide: STEPPER_GLOBAL_OPTIONS,
+            useValue: { displayDefaultIndicatorType: false },
+        }]
 })
 export class Drone2dGeneticComponent implements AfterViewInit  {
   limitedWorkers?: TestLimitedWorkers;

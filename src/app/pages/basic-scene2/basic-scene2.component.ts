@@ -17,9 +17,10 @@ import { Model1D2 } from 'src/app/NetsIA/ModelIA1D';
  * Manejo de la posición del dron en 1D, pero usando solo 3 posibles estados de salida, que serían si sube la potencia, mantiene o baja.
  */
 @Component({
-  selector: 'app-basic-scene2',
-  templateUrl: './basic-scene2.component.html',
-  styleUrls: ['./basic-scene2.component.scss']
+    selector: 'app-basic-scene2',
+    templateUrl: './basic-scene2.component.html',
+    styleUrls: ['./basic-scene2.component.scss'],
+    standalone: false
 })
 export class BasicScene2Component extends BasicSceneBase implements OnInit, AfterViewInit, OnDestroy { 
   private lastTimestap = 0;

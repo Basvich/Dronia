@@ -14,9 +14,10 @@ interface IData1{
 
 
 @Component({
-  selector: 'app-test-models',
-  templateUrl: './test-models.component.html',
-  styleUrls: ['./test-models.component.scss']
+    selector: 'app-test-models',
+    templateUrl: './test-models.component.html',
+    styleUrls: ['./test-models.component.scss'],
+    standalone: false
 })
 export class TestModelsComponent {
   data1?:IData1;

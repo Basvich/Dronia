@@ -9,12 +9,11 @@ import { NgChartsModule } from 'ng2-charts';
 
 
 @Component({
-  standalone: true,  
-  providers: [],
-  imports: [NgChartsModule],
-  selector: 'app-drone3d-learning',
-  templateUrl: './drone3d-learning.component.html',
-  styleUrls: ['./drone3d-learning.component.scss']
+    providers: [],
+    imports: [NgChartsModule],
+    selector: 'app-drone3d-learning',
+    templateUrl: './drone3d-learning.component.html',
+    styleUrls: ['./drone3d-learning.component.scss']
 })
 export class Drone3dLearningComponent {
   destroyRef = inject(DestroyRef);
