@@ -9,8 +9,10 @@
         <mat-icon  [ngClass]="{roundedSelected: isExaming}">quiz</mat-icon>
         <mat-icon  [ngClass]="{roundedSelected: isExaming}">shuffle</mat-icon>
       </div>
-      <div><mat-progress-bar *ngIf="progressNfo.visible" mode="buffer" [value]="progressNfo.value" [bufferValue]="progressNfo.buffer"></mat-progress-bar></div>
-        
+      <div>@if (progressNfo.visible) {
+        <mat-progress-bar mode="buffer" [value]="progressNfo.value" [bufferValue]="progressNfo.buffer"></mat-progress-bar>
+      }</div>
+
       <span>cosas</span>
       <div class="students-table-container">
         <table mat-table [dataSource]="dsStudents" class="students-table">
@@ -54,7 +56,7 @@
       </mat-paginator>
     </div>
   </div>
-  <div class="controlsGroup">    
+  <div class="controlsGroup">
     <div class="verticalGroup">
       <span>Steps</span>
       <mat-stepper #stepper [linear]="true">
@@ -64,20 +66,20 @@
           </ng-template>
           <div>
             <button [disabled]="bussy" mat-flat-button color="primary" (click)="testCreateStudents()"
-              matTooltip="Create a set of drones to train">Create drone set</button>
+            matTooltip="Create a set of drones to train">Create drone set</button>
             <button [disabled]="true" mat-flat-button color="primary" matTooltip="">Load</button>
           </div>
         </mat-step>
         <mat-step label="Learning process" state="learn">
           <div>
             <button mat-flat-button color="primary" (click)="StudentsWorkingLearn()"
-              matTooltip="All students learn in parallel mode">Test students work</button>            
+            matTooltip="All students learn in parallel mode">Test students work</button>
           </div>>
         </mat-step>
         <mat-step label="Evaluations" state="eval" [editable]="false">
           <div>
             <button mat-flat-button color="primary" (click)="StudentsWorkingExamination()"
-              matTooltip="Students pass multiple tests to assess their learning">Test students work</button>    
+            matTooltip="Students pass multiple tests to assess their learning">Test students work</button>
           </div>
         </mat-step>
         <mat-step label="Genetic changes" state="genetic"></mat-step>
@@ -93,7 +95,7 @@
       <mat-expansion-panel>
         <mat-expansion-panel-header>
           <mat-panel-title>Small concept tests</mat-panel-title>
-        </mat-expansion-panel-header>        
+        </mat-expansion-panel-header>
         <button mat-flat-button color="secondary" (click)="test1()">new observable</button>
         <button mat-flat-button color="secondary" (click)="test2()">free worker</button>
         <button mat-flat-button color="secondary" (click)="test3()">worker observable</button>
