@@ -15,14 +15,9 @@
       },
       "extends": [
         "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@angular-eslint/recommended",
-        "plugin:@angular-eslint/template/process-inline-templates"
+        "plugin:@typescript-eslint/recommended"
       ],
       "rules": {
-        "@angular-eslint/directive-selector": [
-          "error", {  "type": "attribute",  "prefix": "app",   "style": "camelCase"  } ],
-        "@angular-eslint/component-selector": [ "error",  { "type": "element",  "prefix": "app",  "style": "kebab-case"} ],
         "require-await":"error",
         "@typescript-eslint/no-floating-promises": ["warn",{ "ignoreVoid": true }]   ,
         "@typescript-eslint/prefer-readonly-parameter-types":["off",{"checkParameterProperties":false,"ignoreInferredTypes":true, "treatMethodsAsReadonly":true}],        
@@ -47,15 +42,6 @@
          "padded-blocks":["warn","never"],
          "semi":"warn"
       }
-    },
-    {
-      "files": [
-        "*.html"
-      ],
-      "extends": [
-        "plugin:@angular-eslint/template/recommended"
-      ],
-      "rules": {}
     }
   ]
 }

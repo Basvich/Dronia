@@ -105,23 +105,11 @@
             "karmaConfig": "karma.conf.js",
             "webWorkerTsConfig": "tsconfig.worker.json"
           }
-        },
-        "lint": {
-          "builder": "@angular-eslint/builder:lint",
-          "options": {
-            "lintFilePatterns": [
-              "src/**/*.ts",
-              "src/**/*.html"
-            ]
-          }
         }
       }
     }
   },
   "cli": {
-    "analytics": "2a2fb2a6-29cd-4363-8712-6160f5ec793a",
-    "schematicCollections": [
-      "@angular-eslint/schematics"
-    ]
+    "analytics": "2a2fb2a6-29cd-4363-8712-6160f5ec793a"
   }
 }
