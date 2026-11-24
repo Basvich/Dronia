@@ -74,7 +74,7 @@ Una vez que el dron tiende a mantenerse dentro de los limites pero simplemente q
 
 ## Readme por defecto
 
-Teniendo el entorno con node.js instalado (>=18), y angular (actualmente la v16), se puede descargar el proyecto, y usando visual code, ejecutar directamente sin ninguna otra dependencia especial, ya que están todas incluidas dentro (como cualquier proyecto angular).
+Con Node.js compatible (`^22.22.3`, `^24.15.0` o `>=26.0.0`), ejecuta `npm ci` para instalar las dependencias del proyecto.
 
 ### Development server
 
@@ -90,7 +90,7 @@ Run `ng build` to build the project. The build artifacts will be stored in the `
 
 ### Lint
 
-Ejecuta `npm run lint` para analizar los archivos TypeScript. Las plantillas HTML y las reglas específicas de Angular no se comprueban con ESLint.
+Ejecuta `npm run lint` para analizar los archivos TypeScript con ESLint y TypeScript ESLint. La configuración está en `eslint.config.mjs`; las plantillas HTML y las reglas específicas de Angular no se comprueban con ESLint.
 
 ### Running unit tests
 

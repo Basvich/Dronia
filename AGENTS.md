@@ -8,7 +8,7 @@ Este repositorio conserva deliberadamente varias aproximaciones de un mismo expe
 
 ## Entorno y comandos
 
-- Usa Node.js 18 o posterior.
+- Usa una versión de Node.js compatible con Angular: `^22.22.3`, `^24.15.0` o `>=26.0.0`.
 - Instala las dependencias reproduciblemente con `npm ci`.
 - Inicia el entorno de desarrollo con `npm start`.
 - Comprueba tipos y build con `npm run build`.
@@ -28,7 +28,7 @@ No sustituyas npm por otro gestor de paquetes ni modifiques dependencias para un
 
 ## Convenciones
 
-- Mantén TypeScript estricto, con las opciones de `tsconfig.json` y las reglas de `.eslintrc.json`.
+- Mantén TypeScript estricto, con las opciones de `tsconfig.json` y las reglas de `eslint.config.mjs`.
 - Respeta `.editorconfig`: UTF-8, dos espacios, comillas simples en TypeScript y línea final.
 - Usa la arquitectura Angular existente. Los componentes pueden ser `standalone` o declarados en `AppModule`; comprueba el patrón local antes de añadir componentes.
 - Conserva los selectores `app-*` para componentes y `app...` en camelCase para directivas.
