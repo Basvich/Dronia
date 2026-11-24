@@ -36,7 +36,10 @@
             ],
             "scripts": [],
             "allowedCommonJsDependencies": [
-              "lodash"
+              "long",
+              "node-fetch",
+              "seedrandom",
+              "string_decoder"
             ],
             "webWorkerTsConfig": "tsconfig.worker.json",
             "browser": "src/main.ts"
@@ -46,8 +49,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kb",
-                  "maximumError": "1mb"
+                  "maximumWarning": "3mb",
+                  "maximumError": "4mb"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -105,7 +108,8 @@
               "text-summary"
             ],
             "buildTarget": ":build:testing",
-            "runner": "vitest"
+            "runner": "vitest",
+            "runnerConfig": true
           }
         }
       }

@@ -9,6 +9,7 @@ import { NgChartsModule } from 'ng2-charts';
 
 
 @Component({
+    standalone: true,
     providers: [],
     imports: [NgChartsModule],
     selector: 'app-drone3d-learning',

@@ -13,6 +13,8 @@ import { TestModelsComponent } from './pages/test-models/test-models.component';
 import { BasicScene2Component } from './pages/basic-scene2/basic-scene2.component';
 import { Drone2dComponent } from './pages/drone2d/drone2d.component';
 import { Drone2dGeneticComponent } from './pages/drone2d-genetic/drone2d-genetic.component';
+import { Drone1DComponent } from './graph/drone1-d/drone1-d.component';
+import { Drone1AcurrateComponent } from './graph/drone1-acurrate/drone1-acurrate.component';
 
 
 @NgModule({
@@ -32,7 +34,9 @@ import { Drone2dGeneticComponent } from './pages/drone2d-genetic/drone2d-genetic
         BrowserAnimationsModule,        
         FormsModule,
         ReactiveFormsModule,
-        ThreeRenderComponent,        
+        ThreeRenderComponent,
+        Drone1DComponent,
+        Drone1AcurrateComponent,
         Drone2dComponent,
         Drone2dGeneticComponent
     ]

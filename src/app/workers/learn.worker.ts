@@ -33,7 +33,9 @@ class learnWorker implements IDisposable{
   public learnCiclesTest(){
     const start = Date.now();
     const segs=Random.next(2000,6000);
-    while (Date.now() < start + segs) {}
+    while (Date.now() < start + segs) {
+      // Simula temporalmente el coste del aprendizaje.
+    }
     this.student.score=Random.nexti(-30,30);
     this.student.learnCicles+=1;
   }

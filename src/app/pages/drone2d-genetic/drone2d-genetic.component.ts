@@ -88,7 +88,6 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
   */
   StudentsWorkingLearn(){
     this.isLearning=true;
-    const thats=this;
     const numStudents=this.students.length;
     this.setProgress(0, numStudents);
     const obs$=from(this.students).pipe(tap((s)=>{      
@@ -96,7 +95,7 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
     }));
     this.learnWorkerSrv.CicleLeanrStudents3(obs$).subscribe(
       {
-        next(value){
+        next: (value) => {
           console.log(`[Drone2dGenetic] StudentsWorkingLearn() Rx proceso name: "${value.value.name}" - status: "${SatusWorking[value.status]}"`);
           if(value.nfo) console.log(`count: ${value.nfo.count} pending: ${value.nfo.pending}`);
           switch(value.status){
@@ -109,22 +108,21 @@ export class Drone2dGeneticComponent implements AfterViewInit  {
             value.value.status=StudentStatus.study;
           }   
           if(value.nfo){
-            thats.setProgress(value.nfo.count, numStudents, value.nfo.pending);
+            this.setProgress(value.nfo.count, numStudents, value.nfo.pending);
           }
         },
-        complete(){
+        complete: () => {
            console.log('[Drone2dGenetic] StudentsWorkingLearn() Complete observable.');
-           thats.isLearning=false;
-           thats.setProgress(0,0);
+           this.isLearning=false;
+           this.setProgress(0,0);
         },
-        error(err){console.error(err);}        
+        error: (err) => {console.error(err);}
       }
     );
   }
 
   StudentsWorkingExamination(){
     this.isExaming=true;
-    const thats=this;
     const numStudents=this.students.length;
     this.setProgress(0, numStudents);
     //this.examWorkerSrv.CicleExamineStudents();    

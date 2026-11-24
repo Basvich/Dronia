@@ -14,13 +14,23 @@ import * as THREE from 'three';
 import * as tf from '@tensorflow/tfjs';
 import { DroneLearn3DContext } from 'src/app/NetsIA/DroneLearn3DContext';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule } from '@angular/forms';
+import { Drone3dLearningComponent } from 'src/app/graph/drone3d-learning/drone3d-learning.component';
 
 @Component({
+    standalone: true,
     selector: 'app-drone2d',
     templateUrl: './drone2d.component.html',
     styleUrls: ['./drone2d.component.scss'],
     changeDetection: ChangeDetectionStrategy.Eager,
-    imports: [MatSliderModule, MatSlideToggleModule, MatTooltipModule]
+    imports: [
+      FormsModule,
+      MatSliderModule,
+      MatSlideToggleModule,
+      MatTooltipModule,
+      ThreeRenderComponent,
+      Drone3dLearningComponent
+    ]
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   modelName='Model2D';

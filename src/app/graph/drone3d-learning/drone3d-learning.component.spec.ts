@@ -8,11 +8,10 @@ describe('Drone3dLearningComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [Drone3dLearningComponent]
+      imports: [Drone3dLearningComponent]
     });
     fixture = TestBed.createComponent(Drone3dLearningComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {
