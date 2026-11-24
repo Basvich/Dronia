@@ -1,13 +1,15 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import * as THREE from "three";
 import { BufferAttribute } from 'three';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 const framePeriod=0.04;
 
 @Component({
+  standalone: true,
   selector: 'app-three-render',
   templateUrl: './three-render.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./three-render.component.scss']
 })
 export class ThreeRenderComponent implements AfterViewInit, OnDestroy {

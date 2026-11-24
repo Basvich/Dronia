@@ -28,7 +28,7 @@ describe('ActionMemory', () => {
     fill(aml, 50, (i)=> i); 
     aml.dispose();
     nf=tf.memory().numTensors;
-    expect(nf).withContext("forced more data than size").toBe(0);
+    expect(nf, 'forced more data than size').toBe(0);
   });
 
 
@@ -63,14 +63,14 @@ describe('ActionMemory', () => {
     const samples2=samples.slice(0, samples.length-1);
     const testData=getRewArray(nItems, rewardF, lastReward, lastRewardExpanded);
     samples2.forEach((value,index)=>{             
-      expect(value.current.reward).withContext(`i:${index} current`).toBe(testData[index].reward);     
-      expect(value.nextMaxReward).withContext(`i:${index} nextMaxReward`).toBe(testData[index].nextMax);     
-      expect(value.nextMeanReward).withContext(`i:${index} nextMeanReward`).toBe(testData[index].nextMean);     
+      expect(value.current.reward, `i:${index} current`).toBe(testData[index].reward);     
+      expect(value.nextMaxReward, `i:${index} nextMaxReward`).toBe(testData[index].nextMax);     
+      expect(value.nextMeanReward, `i:${index} nextMeanReward`).toBe(testData[index].nextMean);     
     });
     const lastSample=samples[samples.length-1];
-    expect(lastSample.nextMaxReward).withContext('lastSample').toBe(testData[samples.length-1].reward);
-    expect(lastSample.current.reward).withContext('lastSample').toBe(testData[samples.length-1].nextMax);
-    expect(lastSample.nextMeanReward).withContext(`lastSample mean`).toBe(testData[samples.length-1].nextMean);     
+    expect(lastSample.nextMaxReward, 'lastSample').toBe(testData[samples.length-1].reward);
+    expect(lastSample.current.reward, 'lastSample').toBe(testData[samples.length-1].nextMax);
+    expect(lastSample.nextMeanReward, 'lastSample mean').toBe(testData[samples.length-1].nextMean);     
     aml.dispose();
   });
 
@@ -81,15 +81,15 @@ describe('ActionMemory', () => {
     fill(aml, nItems, rewardF);
     aml.finalize(0);
     const samples=aml.getAllSamples();
-    expect(aml.finalReward).withContext('Ultimo valor').toBe(rewardF(nItems-1));
+    expect(aml.finalReward, 'Ultimo valor').toBe(rewardF(nItems-1));
     for(let i=0; i<nItems; i++){
       const current=samples[i];
       const espectedRew=rewardF(i);
-      expect(current.current.reward).withContext('recomensa normal').toBe(espectedRew);
+      expect(current.current.reward, 'recomensa normal').toBe(espectedRew);
       if(i<5){
-        expect(current.nextMaxReward).withContext('Parte creciente el maximo es el tope').toBe(5);        
+        expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBe(5);        
       }else{
-        expect(current.nextMaxReward).withContext('Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
+        expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
       }
     }
   });
@@ -101,15 +101,15 @@ describe('ActionMemory', () => {
     fill(aml, nItems, rewardF);
     aml.finalize(0);
     const samples=aml.getAllSamples();
-    expect(aml.finalReward).withContext('Ultimo valor').toBe(rewardF(nItems-1));
+    expect(aml.finalReward, 'Ultimo valor').toBe(rewardF(nItems-1));
     for(let i=0; i<nItems; i++){
       const current=samples[i];
       const espectedRew=rewardF(i);
-      expect(current.current.reward).withContext('recomensa normal').toBe(espectedRew);
+      expect(current.current.reward, 'recomensa normal').toBe(espectedRew);
       if(i<5){
-        expect(current.nextMaxReward).withContext('Parte creciente el maximo es el tope').toBe(5);        
+        expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBe(5);        
       }else{
-        expect(current.nextMaxReward).withContext('Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
+        expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
       }
     }
   });

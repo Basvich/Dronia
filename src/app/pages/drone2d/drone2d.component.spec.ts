@@ -8,11 +8,10 @@ describe('Drone2dComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [Drone2dComponent]
+      imports: [Drone2dComponent]
     });
     fixture = TestBed.createComponent(Drone2dComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

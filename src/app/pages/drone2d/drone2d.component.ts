@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnInit, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ThreeRenderComponent } from 'src/app/three-render/three-render.component';
 import { TDrone3D, TTargetDrone } from 'src/app/Objects/Drone3D';
 import { TDroneMesh, TTargetMesh } from 'src/app/Objects/TDroneMesh';
@@ -6,17 +6,31 @@ import { ICicle3DOptions, LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
 import { AdapterDrone2D } from 'src/app/NetsIA/AdapterDroneTf';
 import { ModelDron2D } from 'src/app/NetsIA/ModelIA1D';
 import GUI from 'lil-gui';
-import { MatSlideToggleChange } from '@angular/material/slide-toggle';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
+import {MatSliderModule} from '@angular/material/slider';
 import { MinLapseTroller, Random } from 'src/app/Objects/utils';
 import { Subject } from 'rxjs';
 import * as THREE from 'three';
 import * as tf from '@tensorflow/tfjs';
 import { DroneLearn3DContext } from 'src/app/NetsIA/DroneLearn3DContext';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule } from '@angular/forms';
+import { Drone3dLearningComponent } from 'src/app/graph/drone3d-learning/drone3d-learning.component';
 
 @Component({
-  selector: 'app-drone2d',
-  templateUrl: './drone2d.component.html',
-  styleUrls: ['./drone2d.component.scss']
+    standalone: true,
+    selector: 'app-drone2d',
+    templateUrl: './drone2d.component.html',
+    styleUrls: ['./drone2d.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    imports: [
+      FormsModule,
+      MatSliderModule,
+      MatSlideToggleModule,
+      MatTooltipModule,
+      ThreeRenderComponent,
+      Drone3dLearningComponent
+    ]
 })
 export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
   modelName='Model2D';
@@ -134,7 +148,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
         loss: lastLoss(r.history),
         stepsCount: r.steps
       });
-      if(infos.length===10){
+      if(infos.length===10){  //Para tener info granulada
         const nfo=createInfo(this.ciclesCount+i+1);
         this.learnCicleCount.next(nfo);
         infos.length=0;
@@ -202,7 +216,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
 
   public dispose() {
     if (this.droneLearnCtx) {
-      this.droneLearnCtx.Dispose();
+      this.droneLearnCtx.dispose();
       this.droneLearnCtx = undefined;
     }
     if (this.miniMenuGui) {

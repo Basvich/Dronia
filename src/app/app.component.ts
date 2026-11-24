@@ -1,10 +1,24 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    changeDetection: ChangeDetectionStrategy.Eager,
+    standalone: false
 })
 export class AppComponent {
   title = 'Dronia';
 }
+
+/* if (typeof Worker !== 'undefined') {
+  // Create a new
+  const worker = new Worker(new URL('./app.worker', import.meta.url));
+  worker.onmessage = ({ data }) => {
+    console.log(`page got message: ${data}`);
+  };
+  worker.postMessage('hello');
+} else {
+  // Web Workers are not supported in this environment.
+  // You should add a fallback so that your program still executes correctly.
+} */

@@ -6,19 +6,42 @@ import { TDrone3D } from "../Objects/Drone3D";
 import { ActionsMemory, IActionReplay, IActionReward } from "./ActionsMemory";
 import * as tf from '@tensorflow/tfjs';
 import { ICicle3DOptions } from "./DroneLearnContext";
-import { Random } from "../Objects/utils";
+import { IDisposable, ISerializable, Random } from "../Objects/utils";
 
 /** El maximo de samples en cada simulación. Evita que se quede en una situación estable infinatemente */
 const MaxSteps = 1000;
 /** El mínimo de samples que queremos para poder entrenar la red */
 const MinNumSamples = 1000;
 
-export class DroneLearn3DContext {
+export interface ITensorFloat{
+  data:Float32Array;
+  shape:number[];
+}
+
+export interface IDataModelSerial{
+  weights: ITensorFloat[];
+}
+
+export interface ILearnContextSerialized{
+  /** Los datos del modelo de la red */
+  modelRN:IDataModelSerial;
+}
+
+export interface ISimulateCfg{
+  pos:[x:number, y:number, z:number],
+  vel?:[x:number, y:number, z:number],
+  /** Máximo numero de pasos */
+  maxSteps?:number,
+  /** Si se alcanza esta mínima recompensa, salimos */
+  minReward?:number
+}
+
+export class DroneLearn3DContext implements ISerializable, IDisposable {
   /** El tiempo prefijado de cada salto de simulación */
   private LapseSegCicle = 0.1;
   private adapter: IAdapterDrone3D;// AdapterDroneTf;
   private jury = new TReward3D();
-  private modelDummy: tf.LayersModel;
+  private modelDummy?: tf.LayersModel;
   private rnModel: NeuronalDronModel;
 
   public get NetModel() { return this.rnModel; }
@@ -35,7 +58,7 @@ export class DroneLearn3DContext {
   public constructor(private drone: TDrone3D, factoryRN: () => NeuronalDronModel, factoryAdapter: () => IAdapterDrone3D) {
     this.rnModel = factoryRN();
     this.adapter = factoryAdapter();//new AdapterDroneTf(drone);    
-    this.modelDummy = this.createDummyModel();
+    //this.modelDummy = this.createDummyModel();
   }
 
   public async LearnCicle(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; }> {
@@ -89,7 +112,7 @@ export class DroneLearn3DContext {
 
       const reward = this.jury.InstanReward(this.drone);
       if (info !== undefined && (stepCount % 128 === 0 || (reward <= this.minReward))) {
-        console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
+        //console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
       }
       stepCount++;
       isInside = reward >= this.minReward;//this.IsInBoundLimits(this.drone); 
@@ -104,7 +127,7 @@ export class DroneLearn3DContext {
       }
       isDone = this.jury.IsDone(this.drone);
     }
-    console.log(`Fuera de los limites ${stepCount}`);
+    //console.log(`Fuera de los limites ${stepCount}`);
     let lastReward = 0;
     if (!isInside) {
       lastReward = this.jury.badReward;
@@ -124,7 +147,7 @@ export class DroneLearn3DContext {
    * @param opt 
    * @returns 
    */
-  public async LearnCicleAgregated(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; }> {
+  public async LearnCicleAgregated(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; reward:number }> {
     const amDatas: ActionsMemory<tf.Tensor2D, tf.Tensor2D>[] = [];
     const rndExploracion = opt?.explorationF ?? 0.05; //por defecto Un 5% de escoger una ruta aleatoria
 
@@ -178,7 +201,7 @@ export class DroneLearn3DContext {
 
         const reward = this.jury.InstanReward(this.drone);
         if (info !== undefined && (stepCount % 128 === 0 || (reward <= this.minReward))) {
-          console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
+          //console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
         }
         stepCount++;
         isInside = reward >= this.minReward;//this.IsInBoundLimits(this.drone); 
@@ -193,7 +216,7 @@ export class DroneLearn3DContext {
         }
         isDone = this.jury.IsDone(this.drone);
       }
-      console.log(`Fuera de los limites ${stepCount}`);
+      //console.log(`Fuera de los limites ${stepCount}`);
       let lastReward = 0;
       if (!isInside) {
         lastReward = this.jury.badReward;
@@ -207,15 +230,17 @@ export class DroneLearn3DContext {
     }
 
     const bath = amDatas.reduce((acumm, value) => { acumm.push(...value.getAllSamples()); return acumm; }, [] as IActionReplay<tf.Tensor2D, tf.Tensor2D>[]);
-
+    const rewardMedium=amDatas.reduce((acumm, value) => {return {sum:acumm.sum+value.totalReward, len:acumm.len+value.data.length}},{sum:0, len:0});
+    const reward=rewardMedium.sum/rewardMedium.len;
     const h = await this.replayAndTrain(bath);
     //Liberación de toda la menoria
     amDatas.forEach((am) => am.dispose());
     const meanSteps = Math.floor(totalSamples/subCicleCount);
-    return { history: h, steps: meanSteps };
+    return { history: h, steps: meanSteps, reward };
   }
 
   public async LearnDummy() {
+    if(!this.modelDummy) return;
     const nSteps = 200;
     const scale = 1 / nSteps;
     const x0: number[][] = [];
@@ -302,6 +327,46 @@ export class DroneLearn3DContext {
     return res;
   }
 
+  /**Simula un ciclo a partir de las condiciones iniciales o hasta que se cumpla alguna de las condiciones */
+  public simulateCicleExt(opt:ISimulateCfg): { stepCount: number; lastReward: number; mean: number } {
+    this.drone.Reset(); //Partimos de la misma posición...
+    this.drone.Position.set(opt.pos[0], opt.pos[1], opt.pos[2]);
+    const v0=opt.vel??[0,0,0];
+    this.drone.Velocity.set(v0[0], v0[1], v0[2]);
+    const maxSteps=opt.maxSteps??MaxSteps;
+    const minReward=opt.minReward??-100000;
+    let isDone = 0;
+    let isInside = true;
+    let stepCount = 0;
+    let reward = 0;
+    const histRewards = [];
+    while (stepCount < maxSteps && !isDone && isInside) {
+      const droneState = this.adapter.getStateTensor();
+      const r = this.rnModel.predict(droneState);
+      droneState.dispose();
+      this.adapter.setControlData(r);
+      r?.dispose();
+      this.drone.Simulate(this.LapseSegCicle);
+      reward = this.jury.InstanReward(this.drone);
+      stepCount++;
+      isInside = this.IsInBoundLimits(this.drone);
+      isDone = this.jury.IsDone(this.drone);
+      histRewards.push(reward);
+      if(reward<=minReward) break;
+    }
+    let lastReward = 0;
+    if (!isInside) {
+      lastReward = this.jury.badReward;
+    } else if (isDone) {
+      lastReward = isDone;
+    } else lastReward += this.jury.badMiniReward;
+    lastReward += reward;
+    histRewards[histRewards.length - 1] = lastReward;
+    const mean = DroneLearn3DContext.mean(histRewards, 100);
+    const res = { stepCount, lastReward, mean };
+    return res;
+  }
+
   /**
    * Toma el estado del drone asociado y lo controla con la prediccion de la red neuronal
    */
@@ -313,14 +378,34 @@ export class DroneLearn3DContext {
     droneState.dispose();
   }
 
-  public Dispose() {
+  /** Devuelve un objeto con el estado, que permite volver a recrearlo */
+  public getSerializedState():ILearnContextSerialized{
+    if(!this.NetModel.model) throw new Error("Undefinded net model");
+    const model=DroneLearn3DContext.serializeModel(this.NetModel.model);
+    const res:ILearnContextSerialized={ modelRN:model};    
+    return res;
+  }
+
+  /**
+   * Carga el estado y pesos de la red neuronal
+   * @param state 
+   */
+  public loadSerializedState(state:unknown){
+    const st=state as ILearnContextSerialized;
+    if(!st) throw new Error("Invalid serialized state");
+    if(!this.NetModel.model) throw new Error("Undefinded net model");
+    DroneLearn3DContext.loadSerializeInModel(this.NetModel.model, st.modelRN);
+  }
+
+  public dispose() {
     if (this.rnModel) {
       this.rnModel.dispose();
     }
   }
 
   dummyPredict(states: tf.Tensor | tf.Tensor[]): tf.Tensor2D | undefined {
-    return tf.tidy(() => this.modelDummy.predict(states)) as tf.Tensor2D;
+    if(!this.modelDummy) return undefined;
+    return tf.tidy(() => this.modelDummy?.predict(states)) as tf.Tensor2D;
   }
 
   /** Repite los ultimos datos simulados, guardando los datos obtenidos de la simulación */
@@ -378,14 +463,14 @@ export class DroneLearn3DContext {
     };
     const args: tf.ModelFitArgs = { epochs: 30, batchSize: 64, callbacks: printCallback };
     const h = await this.rnModel.train(xs, ys, args);
-    console.log(h);
+    //console.log(h);
     const tLastX0 = tf.tensor2d([lastx0]);
     const tPredicted = this.rnModel.predict(tLastX0);
     const predicted = tPredicted?.dataSync();
     tLastX0.dispose();
     tPredicted?.dispose();
-    console.log('ultimo y0', lasty0);
-    console.log('prediccion', predicted);
+    /* console.log('ultimo y0', lasty0);
+    console.log('prediccion', predicted); */
     //model1D.model?.fit()
     xs.dispose();
     ys.dispose();
@@ -429,6 +514,28 @@ export class DroneLearn3DContext {
     const sum = d.reduce((a, b) => a + b, 0);
     const avg = (sum / d.length) || 0;
     return avg;
+  }
+
+  private static serializeModel(model: tf.LayersModel): IDataModelSerial{
+    const ws=model.getWeights(true);
+    const res:ITensorFloat[] =[];
+    for(const w of ws){
+      const data=w.dataSync() as Float32Array;  
+      const shape=w.shape;   
+      res.push({data,shape});
+    }
+    //ws.forEach((w)=>w.dispose());
+    return {weights:res};
+  }
+
+  private static loadSerializeInModel(destModel: tf.LayersModel, data:IDataModelSerial ){
+    const weights: Array<tf.Tensor<tf.Rank>> =[];
+    for(const f of data.weights){
+      const w=tf.tensor(f.data, f.shape);
+      weights.push(w);
+    }
+    destModel.setWeights(weights);
+    //weights.forEach((w)=>w.dispose());
   }
 
 }

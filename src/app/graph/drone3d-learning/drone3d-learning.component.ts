@@ -1,16 +1,21 @@
-import { Component, DestroyRef, Input, ViewChild, inject } from '@angular/core';
+import { Component, DestroyRef, Input, ViewChild, inject, ChangeDetectionStrategy } from '@angular/core';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { LearnInfo } from 'src/app/NetsIA/DroneLearnContext';
+import { NgChartsModule } from 'ng2-charts';
 
 
 
 
 @Component({
-  selector: 'app-drone3d-learning',
-  templateUrl: './drone3d-learning.component.html',
-  styleUrls: ['./drone3d-learning.component.scss']
+    standalone: true,
+    providers: [],
+    imports: [NgChartsModule],
+    selector: 'app-drone3d-learning',
+    templateUrl: './drone3d-learning.component.html',
+    changeDetection: ChangeDetectionStrategy.Eager,
+    styleUrls: ['./drone3d-learning.component.scss']
 })
 export class Drone3dLearningComponent {
   destroyRef = inject(DestroyRef);

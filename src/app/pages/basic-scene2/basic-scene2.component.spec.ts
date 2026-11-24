@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BasicScene2Component } from './basic-scene2.component';
+import { AppModule } from '../../app.module';
 
 describe('BasicScene2Component', () => {
   let component: BasicScene2Component;
@@ -8,11 +9,10 @@ describe('BasicScene2Component', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [BasicScene2Component]
+      imports: [AppModule]
     });
     fixture = TestBed.createComponent(BasicScene2Component);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

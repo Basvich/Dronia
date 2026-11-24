@@ -211,7 +211,7 @@ export class ModelDron2D implements NeuronalDronModel{
     network.add(tf.layers.dense({ units: this.outputNumActions, 
         //kernelInitializer:tf.initializers.zeros ()
       }));
-    network.summary();
+    //network.summary();
     network.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
     this.model = network;
   }

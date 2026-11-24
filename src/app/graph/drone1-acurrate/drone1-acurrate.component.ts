@@ -3,6 +3,8 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { DroneLearnContext } from 'src/app/NetsIA/DroneLearnContext';
+import { NgChartsModule } from 'ng2-charts';
+import { CommonModule } from '@angular/common';
 
 interface IInitialPos {
   posY: number;
@@ -13,6 +15,8 @@ interface IInitialPos {
  * Permite ver si mejoramos en el aprendizaje
  */
 @Component({
+  standalone:true,
+  imports:[CommonModule, NgChartsModule],
   selector: 'app-drone1-acurrate',
   templateUrl: './drone1-acurrate.component.html',
   styleUrls: ['./drone1-acurrate.component.scss']

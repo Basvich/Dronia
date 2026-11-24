@@ -8,13 +8,12 @@ describe('ThreeRenderComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ ThreeRenderComponent ]
+      imports: [ ThreeRenderComponent ]
     })
     .compileComponents();
 
     fixture = TestBed.createComponent(ThreeRenderComponent);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
   it('should create', () => {

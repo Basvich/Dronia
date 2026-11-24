@@ -63,7 +63,7 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     // eslint-disable-next-line no-param-reassign
     this.totalReward = this.data.reduce((acum, value) => acum += value.reward, 0);
     this.finalReward = this.data[this.data.length - 1].reward;
-    console.log(`finalizado con recompensa final: ${(this.data[this.data.length - 1].reward).toFixed(2)}  media:${(this.totalReward/this.data.length).toFixed(2)}`);
+    //console.log(`finalizado con recompensa final: ${(this.data[this.data.length - 1].reward).toFixed(2)}  media:${(this.totalReward/this.data.length).toFixed(2)}`);
   }
 
   /**

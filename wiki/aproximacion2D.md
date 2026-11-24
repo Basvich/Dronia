@@ -3,6 +3,7 @@
 Esto es usando un modelo que puede moverse en 2 dimensiones: [x,y]. Para ello, se usa en el control de dron además la posibilidad de controlar el pith, o sea la inclinación en torno al eje Z, dicho de otra forma, el cabeceo. Con ello el dron puede moverse tambien en el eje X.
 
 En cuanto a los datos que se usan para el entrenamiento, hace falta tener entonces la siguiente información:
+
 * Fuerzas detectadas, esto son los componentes de las fuerzas en X e Y. Esta información permitiría a la red conocer la orientación y aceleración del dron. Por ejemplo si está perfectamente estable y horizontal, tendría como fuerza y=-1 siendo x=0. Si está inclinado unos 45º y con velocidad constante, tendría una fuerza y~=1,41 e x~=-1,41. Si se deja caer, en ese momento todas las fuerzas son 0, aumentando la y hasta el momento en que alcance la velocidad limite en el que se alcanza de nuevo y=-1.
 * Velocidades x,y, en este caso referidas al mundo, que proporcionan la velocidad con la que nos movemos.
 * Posición absoluta en x,y. Que para el calculo de las recompensas se usa como relativa al targer deseado.
@@ -16,7 +17,6 @@ En la salida del modelo en 1D, se tenía solo una variable de salida: la fuerza,
 En este caso, necesitamos 2 conjuntos de valores, uno para la fuerza como antes, pero otro también para el acción de cabeceo (pitch).
 
 > 💡 Se ponen mas variables de salida a la red neuronal, con lo que realmente tenemos un array de salida de posibles recomensas, pero lo que hacemos es que somos nosotros lo que interpretamos las 3 primeras posiciones del array como las desadas para manejar la fuerza, y las 3 siguientes para manejar el cabeceo. En cada grupo de ellos se escoje el indice que apunta al resultado que tenga la mayor recompensa.
-
 
 ## Recompensas
 
@@ -43,7 +43,6 @@ Para que pueda converger algo la red (dependiendo de su complejidad), se necesit
 Una de las tipicas cosas que quizás no pensamos, son las soluciones que se van viendo, y que torpedean las ideas previas que teníamos. Una cosa que aprende relativamente rápido la red es que pone ponerse a girar en un sentido, no es tan malo como puede parecer.
 
 Al ponerse a girar el dron, acaba realizando circulos pequeños, y puede mantenerse recibiendo mayor recompensa que quizas apuntar en alguna dirección y volar hacía ahí, ya que acaba cayendo más lentamente. Puede llevar muchisimos ciclos de entrenamiento conseguir que el dron aprenda a salir de esas volteretas apuntando mas o menos al target, y que aprenda que esa salida es mejor que dar vueltas.
-
 
 ### Obtener NAN en la obtención de los datos de loss
 
