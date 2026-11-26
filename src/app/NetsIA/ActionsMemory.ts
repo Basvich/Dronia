@@ -1,6 +1,4 @@
 import * as tf from '@tensorflow/tfjs';
-import { rand } from '@tensorflow/tfjs';
-//import * as _ from 'lodash';
 import { InfoAction } from './AdapterDroneTf';
 
 /**
@@ -13,7 +11,7 @@ export interface IActionReward<TState, TAction> {
   action: TAction;//tf.Tensor2D;
   /** Información para evitar recalculos */
   info: InfoAction;
-  /**recompensa en este estado (corresponde a la accion tomada en el estado anterior) */
+  /** Recompensa obtenida después de aplicar esta acción. */
   reward: number;
 }
 
@@ -31,15 +29,21 @@ export interface IActionReplay<TState, TAction>{
  */
 export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor > {
   private finalized = false;
+  private disposed = false;
   data: IActionReward<TState, TAction>[] = [];
   totalReward = 0;
   finalReward = 0;
 
-  public constructor(public maxLength: number) { }
+  public constructor(public readonly maxLength: number) {
+    if (!Number.isInteger(maxLength) || maxLength < 1) {
+      throw new Error('La capacidad de la memoria debe ser un entero positivo');
+    }
+  }
 
   /**Guarda una acción junto la recompensa obtenida (despues de simular el cambio del sistema con la acción) */
   public add(sample: IActionReward<TState, TAction>) {
-    if (this.finalized) throw new Error("aldready finalized");
+    if (this.disposed) throw new Error('La memoria ya se ha liberado');
+    if (this.finalized) throw new Error('La memoria ya se ha finalizado');
     this.data.push(sample);
     if (this.data.length > this.maxLength) {
       //console.log(`[ActionsMemory] len: ${this.data.length} max: ${this.maxLength}`);
@@ -52,9 +56,14 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
     }
   }
 
-  /**Finaliza y normaliza todos los samples repartiendo el premio final entre todos los samples */
+  /** Distribuye el premio final entre las últimas muestras. */
   public finalize(lastReward: number, numItems=32) {
+    if (this.disposed) throw new Error('La memoria ya se ha liberado');
     if (this.finalized) return;
+    if (this.data.length === 0) throw new Error('No se puede finalizar una memoria vacía');
+    if (!Number.isInteger(numItems) || numItems < 1) {
+      throw new Error('El número de muestras debe ser un entero positivo');
+    }
     this.finalized = true;
     /* const d = lastReward / this.data.length;
     this.data.forEach((value) => value.reward += d); */
@@ -84,6 +93,8 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
   }
 
   public getAllSamples():IActionReplay<TState, TAction>[]{
+    if (this.disposed) throw new Error('La memoria ya se ha liberado');
+    if (this.data.length === 0) return [];
     const f=this.data.length-1;   
     const res : IActionReplay<TState, TAction>[]=new Array<IActionReplay<TState, TAction>>(this.data.length); 
     let next:IActionReward<TState, TAction> | undefined=undefined;
@@ -107,9 +118,12 @@ export class ActionsMemory<TState extends tf.Tensor, TAction extends tf.Tensor >
   }
 
   public dispose() {
+    if (this.disposed) return;
+    this.disposed = true;
     this.data.forEach((element) => {
       element.currentState.dispose();
       element.action.dispose();
     });
+    this.data.length = 0;
   }
 }

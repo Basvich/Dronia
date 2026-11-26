@@ -93,7 +93,7 @@ export class TReward{
     let res=0;
     const posY=drone.Position.y;     
     const velY=drone.Velocity.y;   
-     //Proyectamos la psocion actual junto con la velocidad
+     // Se puntúa la posición proyectada, no solo la distancia actual al objetivo.
     const futPosY=posY+ this.velocityFactor*velY;
     const difY=futPosY- this.targetY; 
     const absDifY=Math.abs(difY);
@@ -177,7 +177,7 @@ export class TReward3D{
 
   private polinomialReward(drone:TDrone3D):number{
     let res=0;    
-     //Proyectamos la psocion actual junto con la velocidad
+     // La distancia Manhattan se calcula proyectando la velocidad durante dos segundos.
     this.futPos.copy(drone.Position).addScaledVector(drone.Velocity, 2);        
     this.futPos.sub(this.target); //Referenciada a
     const absDist=this.futPos.manhattanLength();    

@@ -133,35 +133,35 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
     this.minLapseAutopilot = undefined;
     console.clear();
 
-    if (!this.drone) return;
-    if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();
-    const opt: ICicle3DOptions = {
-      explorationF: this.exploracionFactor,
-      initialsPos: undefined //this.initialsPosIterator
-    };    
-    
-    for (let i = 0; i < this.numCicles; i++) {
-      console.clear();
-      const r=await this.droneLearnCtx.LearnCicleAgregated(opt); //await this.droneLearnCtx.LearnCicle(opt);
-      infos.push({
-        cicleCount: 0,
-        loss: lastLoss(r.history),
-        stepsCount: r.steps
-      });
-      if(infos.length===10){  //Para tener info granulada
-        const nfo=createInfo(this.ciclesCount+i+1);
-        this.learnCicleCount.next(nfo);
-        infos.length=0;
-      }
-    }
-    this.ciclesCount += this.numCicles;
-    if(infos.length>0){
-      const nfo=createInfo(this.ciclesCount);    
-      this.learnCicleCount.next(nfo);      
-    }
-    this.bussy = false;
+    try {
+      if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();
+      const opt: ICicle3DOptions = {
+        explorationF: this.exploracionFactor,
+        initialsPos: undefined
+      };
 
-    //void this.droneLearnCtx.LearnDummy();
+      for (let i = 0; i < this.numCicles; i++) {
+        console.clear();
+        const r=await this.droneLearnCtx.LearnCicleAgregated(opt);
+        infos.push({
+          cicleCount: 0,
+          loss: lastLoss(r.history),
+          stepsCount: r.steps
+        });
+        if(infos.length===10){
+          const nfo=createInfo(this.ciclesCount+i+1);
+          this.learnCicleCount.next(nfo);
+          infos.length=0;
+        }
+      }
+      this.ciclesCount += this.numCicles;
+      if(infos.length>0){
+        const nfo=createInfo(this.ciclesCount);
+        this.learnCicleCount.next(nfo);
+      }
+    } finally {
+      this.bussy = false;
+    }
   }
 
   public async saveModel(){
@@ -310,7 +310,7 @@ export class Drone2dComponent implements OnInit, AfterViewInit, OnDestroy {
       this.targetMesh?.updateFromController();
     }
     if (this.droneLearnCtx) {
-      this.droneLearnCtx.targetPos.y = y;
+      this.droneLearnCtx.targetPos = new THREE.Vector3(0, y, 0);
     }
   }
 

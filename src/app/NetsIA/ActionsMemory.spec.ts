@@ -92,6 +92,7 @@ describe('ActionMemory', () => {
         expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
       }
     }
+    aml.dispose();
   });
 
   it('Compute inverse edge Rewards', () =>{
@@ -112,6 +113,27 @@ describe('ActionMemory', () => {
         expect(current.nextMaxReward, 'Parte creciente el maximo es el tope').toBeLessThanOrEqual(espectedRew);        
       }
     }
+    aml.dispose();
+  });
+
+  it('valida la capacidad y permite consultar una memoria vacía', () => {
+    expect(() => new ActionsMemory(0)).toThrow();
+    const memory = new ActionsMemory(2);
+    expect(memory.getAllSamples()).toEqual([]);
+    expect(() => memory.finalize(0)).toThrow();
+    memory.dispose();
+  });
+
+  it('libera las muestras al desbordar y permite liberar dos veces', () => {
+    const before = tf.memory().numTensors;
+    const memory = new ActionsMemory(2);
+    fill(memory, 3, (i) => i);
+    expect(memory.getAllSamples().map((sample) => sample.current.reward)).toEqual([1, 2]);
+    expect(tf.memory().numTensors).toBe(before + 4);
+    memory.dispose();
+    memory.dispose();
+    expect(tf.memory().numTensors).toBe(before);
+    expect(() => memory.getAllSamples()).toThrow();
   });
 });
 

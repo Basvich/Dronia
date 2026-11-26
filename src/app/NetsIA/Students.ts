@@ -36,7 +36,7 @@ export class Student  implements ISerializable,IDisposable {
   public learnCicles=0;
   public status:StudentStatus=StudentStatus.none;
   public get statusStr(){
-     return new EnumIntToDescriptionPipe().transform(this.status, StudentStatus);
+     return StudentStatus[this.status];
     }
 
   constructor(){
@@ -64,15 +64,16 @@ export class Student  implements ISerializable,IDisposable {
   }
 
   loadSerializedState(state: unknown){
-    if(!this.learnContext) throw new Error('missing learn context');    
-    const st=state as IStudentState;
+    if(!this.learnContext) throw new Error('missing learn context');
+    if (!isStudentState(state)) throw new Error('Estado de alumno inválido');
+    const st = state;
+    this.learnContext.loadSerializedState(st.context);
     this.id=st.id;
     this.score=st.score;
     this.reward=st.reward;
     this.loss=st.loss;
     this.name=st.name;   
     this.learnCicles=st.learnCicles; 
-    this.learnContext.loadSerializedState(st.context);
   }
 
   dispose(){
@@ -89,7 +90,20 @@ export class Student  implements ISerializable,IDisposable {
 export class EnumIntToDescriptionPipe implements PipeTransform {
   // enum object on which you want this pipe to work
   // eslint-disable-next-line class-methods-use-this
-  transform(value: number, eenum: any): any {
+  transform(value: number, eenum: Record<string, string | number>): string | number | undefined {
       return Object.values(eenum)[value];
   }
+}
+
+function isStudentState(state: unknown): state is IStudentState {
+  if (typeof state !== 'object' || state === null) return false;
+  const value = state as Record<string, unknown>;
+  return typeof value['id'] === 'number'
+    && typeof value['name'] === 'string'
+    && typeof value['score'] === 'number'
+    && typeof value['reward'] === 'number'
+    && typeof value['loss'] === 'number'
+    && typeof value['learnCicles'] === 'number'
+    && typeof value['context'] === 'object'
+    && value['context'] !== null;
 }

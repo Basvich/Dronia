@@ -1,9 +1,9 @@
 import * as THREE from "three";
-import { IAdapterDrone3D, InfoAction } from "./AdapterDroneTf";
+import { IAdapterDrone3D } from "./AdapterDroneTf";
 import { NeuronalDronModel } from "./ModelIA1D";
 import { TReward3D } from "./TRewards";
 import { TDrone3D } from "../Objects/Drone3D";
-import { ActionsMemory, IActionReplay, IActionReward } from "./ActionsMemory";
+import { ActionsMemory, IActionReplay } from "./ActionsMemory";
 import * as tf from '@tensorflow/tfjs';
 import { ICicle3DOptions } from "./DroneLearnContext";
 import { IDisposable, ISerializable, Random } from "../Objects/utils";
@@ -53,6 +53,7 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
 
   public set targetPos(v: THREE.Vector3) {
     this.adapter.target3D.copy(v);
+    this.jury.target.copy(v);
   }
 
   public constructor(private drone: TDrone3D, factoryRN: () => NeuronalDronModel, factoryAdapter: () => IAdapterDrone3D) {
@@ -62,181 +63,89 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
   }
 
   public async LearnCicle(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; }> {
-    const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(5000);
-    const rndExploracion = opt?.explorationF ?? 0.05; //por defecto Un 5% de escoger una ruta aleatoria
+    const am = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(5000);
+    try {
+      const steps = this.collectCicle(am, opt);
+      const history = await this.replayAndTrain(am.getAllSamples());
+      return { history, steps };
+    } finally {
+      am.dispose();
+    }
+  }
+
+  /**
+   * Acumula simulaciones hasta alcanzar el mínimo de muestras para entrenar.
+   */
+  public async LearnCicleAgregated(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; reward:number }> {
+    const memories: ActionsMemory<tf.Tensor2D, tf.Tensor2D>[] = [];
+    let totalSamples = 0;
+    try {
+      while (totalSamples < MinNumSamples) {
+        const memory = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(5000);
+        // Se registra antes de simular para liberarla también si falla un paso.
+        memories.push(memory);
+        totalSamples += this.collectCicle(memory, opt);
+      }
+
+      const batch = memories.flatMap((memory) => memory.getAllSamples());
+      const totalReward = memories.reduce((sum, memory) => sum + memory.totalReward, 0);
+      const reward = totalReward / totalSamples;
+      const history = await this.replayAndTrain(batch);
+      return { history, steps: Math.floor(totalSamples / memories.length), reward };
+    } finally {
+      memories.forEach((memory) => memory.dispose());
+    }
+  }
+
+  private collectCicle(am: ActionsMemory<tf.Tensor2D, tf.Tensor2D>, opt?: ICicle3DOptions): number {
+    const rndExploracion = opt?.explorationF ?? 0.05;
     let isDone = 0;
     let isInside = true;
     let stepCount = 0;
 
-    this.drone.Reset(); //Partimos de la misma posición...
-    let pos: number[] | undefined = undefined;
-    let vel: number[] | undefined = undefined;
-    let pitch: number | undefined;
-    if (opt?.initialsPos) {
-      const ip = opt.initialsPos.next();
-      if (!ip.done) {
-        pos = ip.value.pos;
-        vel = ip.value.vel;
-        pitch = ip.value.pith;
-      }
-    }
-    if (!pos) {
-      pos = [Random.gaussianRandom(0, 3), Random.gaussianRandom(6, 5), 0];
-    }
-    if (!vel) {
-      vel = [0, Random.gaussianRandom(0, 2), 0];
-    }
-    if (!pitch) pitch = Random.gaussianRandom(0, 0.5);
-
-
-
+    this.drone.Reset();
+    const initial = opt?.initialsPos?.next();
+    const values = initial && !initial.done ? initial.value : undefined;
+    const pos = values?.pos ?? [Random.gaussianRandom(0, 3), Random.gaussianRandom(6, 5), 0];
+    const vel = values?.vel ?? [0, Random.gaussianRandom(0, 2), 0];
+    const pitch = values?.pith ?? Random.gaussianRandom(0, 0.5);
     this.drone.Position.set(pos[0], pos[1], pos[2]);
     this.drone.Velocity.set(vel[0], vel[1], vel[2]);
     this.drone.Pitch = pitch;
 
     while (stepCount < MaxSteps && isInside) {
       const droneState = this.adapter.getStateTensor();
-      const r = this.rnModel.predict(droneState);
-      //console.log(r);
-      let info: InfoAction | undefined = undefined;
-      const randomExplore = Math.random() < rndExploracion;
-      if (randomExplore) {
-        const indexF = Random.nexti(0, this.adapter.outputSizes[0]);
-        const indexPitch = Random.nexti(this.adapter.outputSizes[0], this.adapter.outputSizes[0] + this.adapter.outputSizes[1]);
-        info = this.adapter.setControlData(r, indexF, indexPitch);
-      } else {
-        info = this.adapter.setControlData(r);
-      }
-      //Ciclos de simulación del objeto
-      this.drone.Simulate(this.LapseSegCicle); //Simulamos en pasos de 100ms
-
-      const reward = this.jury.InstanReward(this.drone);
-      if (info !== undefined && (stepCount % 128 === 0 || (reward <= this.minReward))) {
-        //console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
-      }
-      stepCount++;
-      isInside = reward >= this.minReward;//this.IsInBoundLimits(this.drone); 
-      if (r && info) {
-        const d: IActionReward<tf.Tensor2D, tf.Tensor2D> = {
-          currentState: droneState,
-          action: r,
-          reward,
-          info
-        };
-        am.add(d);
-      }
-      isDone = this.jury.IsDone(this.drone);
-    }
-    //console.log(`Fuera de los limites ${stepCount}`);
-    let lastReward = 0;
-    if (!isInside) {
-      lastReward = this.jury.badReward;
-    } else if (isDone) {
-      lastReward = isDone;
-    }
-    am.finalize(lastReward);
-    const bath = am.getAllSamples();
-    const h = await this.replayAndTrain(bath);
-    am.dispose();
-    return { history: h, steps: stepCount };
-  }
-
-  /**
-   * Similar al ciclo de aprendizaje, pero se acumulan varias simulaciones diferentes hasta que se consigue un número minimo de samples
-   * para poder entrenar mejor
-   * @param opt 
-   * @returns 
-   */
-  public async LearnCicleAgregated(opt?: ICicle3DOptions): Promise<{ history: tf.History; steps: number; reward:number }> {
-    const amDatas: ActionsMemory<tf.Tensor2D, tf.Tensor2D>[] = [];
-    const rndExploracion = opt?.explorationF ?? 0.05; //por defecto Un 5% de escoger una ruta aleatoria
-
-    /** Cuenta del total de samples que vamos teniendo para mandar entrenar */
-    let totalSamples = 0;
-    let subCicleCount = 0;
-
-    while (totalSamples < MinNumSamples) {
-      const am: ActionsMemory<tf.Tensor2D, tf.Tensor2D> = new ActionsMemory<tf.Tensor2D, tf.Tensor2D>(5000);
-      this.drone.Reset(); //Partimos de la misma posición...
-      let pos: number[] | undefined = undefined;
-      let vel: number[] | undefined = undefined;
-      let pitch: number | undefined;
-      if (opt?.initialsPos) {
-        const ip = opt.initialsPos.next();
-        if (!ip.done) {
-          pos = ip.value.pos;
-          vel = ip.value.vel;
-          pitch = ip.value.pith;
-        }
-      }
-      if (!pos) {
-        pos = [Random.gaussianRandom(0, 3), Random.gaussianRandom(6, 5), 0];
-      }
-      if (!vel) {
-        vel = [0, Random.gaussianRandom(0, 2), 0];
-      }
-      if (!pitch) pitch = Random.gaussianRandom(0, 0.5);
-      this.drone.Position.set(pos[0], pos[1], pos[2]);
-      this.drone.Velocity.set(vel[0], vel[1], vel[2]);
-      this.drone.Pitch = pitch;
-      let isDone = 0;
-      let isInside = true;
-      let stepCount = 0;
-
-      while (stepCount < MaxSteps && isInside) {
-        const droneState = this.adapter.getStateTensor();
-        const r = this.rnModel.predict(droneState);
-        //console.log(r);
-        let info: InfoAction | undefined = undefined;
+      let prediction: tf.Tensor2D | undefined;
+      let stored = false;
+      try {
+        prediction = this.rnModel.predict(droneState);
         const randomExplore = Math.random() < rndExploracion;
+        let info;
         if (randomExplore) {
           const indexF = Random.nexti(0, this.adapter.outputSizes[0]);
           const indexPitch = Random.nexti(this.adapter.outputSizes[0], this.adapter.outputSizes[0] + this.adapter.outputSizes[1]);
-          info = this.adapter.setControlData(r, indexF, indexPitch);
+          info = this.adapter.setControlData(prediction, indexF, indexPitch);
         } else {
-          info = this.adapter.setControlData(r);
+          info = this.adapter.setControlData(prediction);
         }
-        //Ciclos de simulación del objeto
-        this.drone.Simulate(this.LapseSegCicle); //Simulamos en pasos de 100ms
-
+        if (!prediction || !info) throw new Error('No se pudo obtener una acción para el entrenamiento');
+        this.drone.Simulate(this.LapseSegCicle);
         const reward = this.jury.InstanReward(this.drone);
-        if (info !== undefined && (stepCount % 128 === 0 || (reward <= this.minReward))) {
-          //console.log(`${stepCount} -> pos:[${this.drone.Position.x.toFixed(2)}, ${this.drone.Position.y.toFixed(2)}] vel:[${this.drone.Velocity.y}] rew:${reward}  ${randomExplore ? 'RND' : ''}`);
-        }
         stepCount++;
-        isInside = reward >= this.minReward;//this.IsInBoundLimits(this.drone); 
-        if (r && info) {
-          const d: IActionReward<tf.Tensor2D, tf.Tensor2D> = {
-            currentState: droneState,
-            action: r,
-            reward,
-            info
-          };
-          am.add(d);
-        }
+        isInside = reward >= this.minReward;
+        am.add({ currentState: droneState, action: prediction, reward, info });
+        stored = true;
         isDone = this.jury.IsDone(this.drone);
+      } finally {
+        if (!stored) {
+          droneState.dispose();
+          prediction?.dispose();
+        }
       }
-      //console.log(`Fuera de los limites ${stepCount}`);
-      let lastReward = 0;
-      if (!isInside) {
-        lastReward = this.jury.badReward;
-      } else if (isDone) {
-        lastReward = isDone;
-      }
-      am.finalize(lastReward);
-      amDatas.push(am);
-      subCicleCount++;
-      totalSamples += stepCount;
     }
-
-    const bath = amDatas.reduce((acumm, value) => { acumm.push(...value.getAllSamples()); return acumm; }, [] as IActionReplay<tf.Tensor2D, tf.Tensor2D>[]);
-    const rewardMedium=amDatas.reduce((acumm, value) => {return {sum:acumm.sum+value.totalReward, len:acumm.len+value.data.length}},{sum:0, len:0});
-    const reward=rewardMedium.sum/rewardMedium.len;
-    const h = await this.replayAndTrain(bath);
-    //Liberación de toda la menoria
-    amDatas.forEach((am) => am.dispose());
-    const meanSteps = Math.floor(totalSamples/subCicleCount);
-    return { history: h, steps: meanSteps, reward };
+    const lastReward = !isInside ? this.jury.badReward : isDone || 0;
+    am.finalize(lastReward);
+    return stepCount;
   }
 
   public async LearnDummy() {
@@ -250,19 +159,25 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
       x0.push([x]);
       y0.push([10, 20]);
     }
-    const xs = tf.tensor2d(x0, [x0.length, 1]); //Tensor con 100 (samples) * 2 valores
-    const ys = tf.tensor2d(y0, [y0.length, 2]); //Tensor con 100 (samples) * 5 valores
-    const args: tf.ModelFitArgs = { epochs: 40 };
-    const h = await this.modelDummy.fit(xs, ys, args);
-    console.log(h);
-    for (let i = 0; i < nSteps; i += 10) {
-      const tx = tf.tensor2d(x0[i], [1, 1]);
-      const rx = this.dummyPredict(tx);
-      tx.dispose();
-      const data = rx?.dataSync();
-      if (data) {
-        console.log(`${i}, [${data[0]}, ${data[1]}]`);
+    const xs = tf.tensor2d(x0, [x0.length, 1]);
+    try {
+      const ys = tf.tensor2d(y0, [y0.length, 2]);
+      try {
+        const args: tf.ModelFitArgs = { epochs: 40 };
+        const h = await this.modelDummy.fit(xs, ys, args);
+        console.log(h);
+        for (let i = 0; i < nSteps; i += 10) {
+          tf.tidy(() => {
+            const tx = tf.tensor2d(x0[i], [1, 1]);
+            const data = this.dummyPredict(tx)?.dataSync();
+            if (data) console.log(`${i}, [${data[0]}, ${data[1]}]`);
+          });
+        }
+      } finally {
+        ys.dispose();
       }
+    } finally {
+      xs.dispose();
     }
   }
 
@@ -272,24 +187,19 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
    * @returns un conjunto con los valores esperados de recompensa para cada accion posible y para cada valor inicial (1 valor es un array de entradas)
    */
   public predictValues(samples: [number, number][]): number[][] {
-    const res = [];
-    const states = this.adapter.getMappedTensor(samples); //Obtiene un tensor con los distintos conjuntos de entrada
-    const r = this.rnModel.predict(states);
-    states.dispose();
-    if (r) {
-      const tensorData = r.dataSync();
-      const nOuts = this.rnModel.outputNumActions;
-      //Separamos en trozos de nOuts
-      for (let i = 0; i < tensorData.length; i += nOuts) {
-        const d = [];
-        for (let j = 0; j < nOuts; j++) {
-          d.push(tensorData[i + j]);
+    return tf.tidy(() => {
+      const res: number[][] = [];
+      const states = this.adapter.getMappedTensor(samples);
+      const r = this.rnModel.predict(states);
+      if (r) {
+        const tensorData = r.dataSync();
+        const nOuts = this.rnModel.outputNumActions;
+        for (let i = 0; i < tensorData.length; i += nOuts) {
+          res.push(Array.from(tensorData.slice(i, i + nOuts)));
         }
-        res.push(d);
       }
-    }
-    r?.dispose();
-    return res;
+      return res;
+    });
   }
 
   public simulateCicle(posY: number, velY: number): { stepCount: number; lastReward: number; mean: number } {
@@ -302,11 +212,7 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
     let reward = 0;
     const histRewards = [];
     while (stepCount < MaxSteps && !isDone && isInside) {
-      const droneState = this.adapter.getStateTensor();
-      const r = this.rnModel.predict(droneState);
-      droneState.dispose();
-      this.adapter.setControlData(r);
-      r?.dispose();
+      this.controlDrone();
       this.drone.Simulate(this.LapseSegCicle);
       reward = this.jury.InstanReward(this.drone);
       stepCount++;
@@ -341,11 +247,7 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
     let reward = 0;
     const histRewards = [];
     while (stepCount < maxSteps && !isDone && isInside) {
-      const droneState = this.adapter.getStateTensor();
-      const r = this.rnModel.predict(droneState);
-      droneState.dispose();
-      this.adapter.setControlData(r);
-      r?.dispose();
+      this.controlDrone();
       this.drone.Simulate(this.LapseSegCicle);
       reward = this.jury.InstanReward(this.drone);
       stepCount++;
@@ -371,11 +273,11 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
    * Toma el estado del drone asociado y lo controla con la prediccion de la red neuronal
    */
   public controlDrone() {
-    const droneState = this.adapter.getStateTensor();
-    const r = this.rnModel.predict(droneState);
-    this.adapter.setControlData(r);
-    r?.dispose();
-    droneState.dispose();
+    tf.tidy(() => {
+      const droneState = this.adapter.getStateTensor();
+      const r = this.rnModel.predict(droneState);
+      this.adapter.setControlData(r);
+    });
   }
 
   /** Devuelve un objeto con el estado, que permite volver a recrearlo */
@@ -391,16 +293,15 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
    * @param state 
    */
   public loadSerializedState(state:unknown){
-    const st=state as ILearnContextSerialized;
-    if(!st) throw new Error("Invalid serialized state");
+    if (!DroneLearn3DContext.isSerializedState(state)) throw new Error('Estado de red inválido');
     if(!this.NetModel.model) throw new Error("Undefinded net model");
-    DroneLearn3DContext.loadSerializeInModel(this.NetModel.model, st.modelRN);
+    DroneLearn3DContext.loadSerializeInModel(this.NetModel.model, state.modelRN);
   }
 
   public dispose() {
-    if (this.rnModel) {
-      this.rnModel.dispose();
-    }
+    this.rnModel.dispose();
+    this.modelDummy?.dispose();
+    this.modelDummy = undefined;
   }
 
   dummyPredict(states: tf.Tensor | tf.Tensor[]): tf.Tensor2D | undefined {
@@ -410,72 +311,51 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
 
   /** Repite los ultimos datos simulados, guardando los datos obtenidos de la simulación */
   private async replayAndTrain(batch: IActionReplay<tf.Tensor2D, tf.Tensor2D>[]): Promise<tf.History> {
-    /* const d1=[ [ 1, 2, 3 ], [ 4, 5, 6 ] ];
-    const example1 = tf.tensor2d(d1);
-    const example2 = tf.tensor2d({values: d1}); */
-
-    /* Tenemos outputNumActions como posibles salidas, cada una de ellas tendrá una recompensa prevista, lo que queremos
-    es entrenar la red para que maneje */
-    let i = 0;
-
-    //const batch = am.getAllSamples();
     const x0: number[][] = [];
-    const y0: number[][] = []; //
-    let lastx0: number[] = [];
-    let lasty0: number[] = [];
-    /**Balanceo sobre la importancia de valor futuros o solo el actual ([0,1] mas alto mayor futuro) */
+    const y0: number[][] = [];
+    // Balance entre recompensa inmediata y media futura.
     const gamma = 0.7;
 
     batch.forEach((d) => {
-      const state = d.current.currentState.dataSync();  //Un array con 2 valores float
-      const staten = Array.from(state);
-      x0.push(staten);
-      lastx0 = staten;
-      //Se modifica la recompensa del action tomado en este paso con la recompensa que se obtiene del siguiente paso
-      //const yy=d.current.action.toFloat
-      //Como no se puede modificar un dato de un tensor, hay que exportarlo, modificarlo y volver a crearlo.
-      /* const buffer = tf.buffer(d.current.action.shape, d.current.action.dtype, d.current.action.dataSync());
-      buffer.toTensor() */
-      const currentQ = d.current.action.dataSync(); //Array con n grupos de n floats todos seguidos
-
+      x0.push(Array.from(d.current.currentState.dataSync()));
+      // dataSync puede compartir almacenamiento con el tensor de la muestra.
+      const currentQ = Array.from(d.current.action.dataSync());
       const reward = (1 - gamma) * d.current.reward + gamma * d.nextMeanReward;
-      for (const indexOfAction of d.current.info.indexActionSelected as number[]) {
-        currentQ[indexOfAction] = reward; //buffer.set(reward, indexOfAction); //actions[indexOfAction]=reward
+      const indices = d.current.info.indexActionSelected;
+      if (!Array.isArray(indices) || indices.length !== this.adapter.outputSizes.length) {
+        throw new Error('Índices de acción inválidos para el entrenamiento 3D');
       }
-
-      //const t = buffer.toTensor() as tf.Tensor2D;  //Se reconvierte a tensor
-      lasty0 = Array.from(currentQ);
-      y0.push(lasty0);
-    });
-    const xs = tf.tensor2d(x0, [x0.length, this.rnModel.inputNumStates]); //Tensor con 100 (samples) * 2 valores
-    const ys = tf.tensor2d(y0, [y0.length, this.rnModel.outputNumActions]); //Tensor con 100 (samples) * 5 valores
-    //Hay que entrenar el modelo con entradas igual a los estados almacenados y como salidas deseadas correspondiente a cada entrada el array de estados
-    // eslint-disable-next-line no-await-in-loop
-    const printCallback = {
-      onEpochEnd: (epoch: number, log: { [key: string]: number; } | undefined) => {
-        if (log) {
-          if (isNaN(log['loss'])) {
-            console.warn('Mal asunto');
-          }
-          //console.log(epoch, log);
+      let offset = 0;
+      indices.forEach((index, group) => {
+        const end = offset + this.adapter.outputSizes[group];
+        if (!Number.isInteger(index) || index < offset || index >= end || index >= currentQ.length) {
+          throw new Error('Índice de acción fuera de su grupo');
         }
-      },
-    };
-    const args: tf.ModelFitArgs = { epochs: 30, batchSize: 64, callbacks: printCallback };
-    const h = await this.rnModel.train(xs, ys, args);
-    //console.log(h);
-    const tLastX0 = tf.tensor2d([lastx0]);
-    const tPredicted = this.rnModel.predict(tLastX0);
-    const predicted = tPredicted?.dataSync();
-    tLastX0.dispose();
-    tPredicted?.dispose();
-    /* console.log('ultimo y0', lasty0);
-    console.log('prediccion', predicted); */
-    //model1D.model?.fit()
-    xs.dispose();
-    ys.dispose();
-    i++;
-    return h;
+        currentQ[index] = reward;
+        offset = end;
+      });
+      y0.push(currentQ);
+    });
+    const xs = tf.tensor2d(x0, [x0.length, this.rnModel.inputNumStates]);
+    try {
+      const ys = tf.tensor2d(y0, [y0.length, this.rnModel.outputNumActions]);
+      try {
+        const args: tf.ModelFitArgs = {
+          epochs: 30,
+          batchSize: 64,
+          callbacks: {
+            onEpochEnd: (epoch, log) => {
+              if (log && Number.isNaN(log['loss'])) console.warn('Mal asunto');
+            }
+          }
+        };
+        return await this.rnModel.train(xs, ys, args);
+      } finally {
+        ys.dispose();
+      }
+    } finally {
+      xs.dispose();
+    }
   }
 
   /**
@@ -520,22 +400,31 @@ export class DroneLearn3DContext implements ISerializable, IDisposable {
     const ws=model.getWeights(true);
     const res:ITensorFloat[] =[];
     for(const w of ws){
-      const data=w.dataSync() as Float32Array;  
-      const shape=w.shape;   
+      const data=Float32Array.from(w.dataSync());
+      const shape=[...w.shape];
       res.push({data,shape});
     }
     //ws.forEach((w)=>w.dispose());
     return {weights:res};
   }
 
+  private static isSerializedState(state: unknown): state is ILearnContextSerialized {
+    if (typeof state !== 'object' || state === null || !('modelRN' in state)) return false;
+    const model = state.modelRN;
+    if (typeof model !== 'object' || model === null || !('weights' in model) || !Array.isArray(model.weights)) return false;
+    return model.weights.every((weight: unknown) => {
+      if (typeof weight !== 'object' || weight === null || !('data' in weight) || !('shape' in weight)) return false;
+      return ArrayBuffer.isView(weight.data) && Object.prototype.toString.call(weight.data) === '[object Float32Array]'
+        && Array.isArray(weight.shape)
+        && weight.shape.every((size: unknown) => typeof size === 'number' && Number.isInteger(size) && size >= 0);
+    });
+  }
+
   private static loadSerializeInModel(destModel: tf.LayersModel, data:IDataModelSerial ){
-    const weights: Array<tf.Tensor<tf.Rank>> =[];
-    for(const f of data.weights){
-      const w=tf.tensor(f.data, f.shape);
-      weights.push(w);
-    }
-    destModel.setWeights(weights);
-    //weights.forEach((w)=>w.dispose());
+    tf.tidy(() => {
+      const weights = data.weights.map((weight) => tf.tensor(Float32Array.from(weight.data), weight.shape));
+      destModel.setWeights(weights);
+    });
   }
 
 }

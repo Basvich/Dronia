@@ -5,8 +5,8 @@ import { IDisposable } from '../Objects/utils';
 
 export interface NeuronalDronModel extends IDisposable{
   model:tf.LayersModel | undefined;
-  inputNumStates:number;
-  outputNumActions:number;
+  readonly inputNumStates:number;
+  readonly outputNumActions:number;
   predict: (states: tf.Tensor | tf.Tensor[]) => tf.Tensor2D | undefined ;
   train:(xBatch: tf.Tensor | tf.Tensor[], yBatch: tf.Tensor | tf.Tensor[], args?:tf.ModelFitArgs) => Promise<tf.History> ;
   
@@ -18,8 +18,8 @@ export interface NeuronalDronModel extends IDisposable{
  */
 export class Model1D implements NeuronalDronModel{
   model: tf.LayersModel | undefined;
-  public outputNumActions = 5; //(2 niveles de fuerza por direccion + 0 (g))
-  public inputNumStates=2;
+  public readonly outputNumActions = 5; //(2 niveles de fuerza por direccion + 0 (g))
+  public readonly inputNumStates=2;
 
   public constructor(){
     this.createModel2();
@@ -90,8 +90,7 @@ export class Model1D implements NeuronalDronModel{
   }
 
   predict(states: tf.Tensor | tf.Tensor[]):tf.Tensor2D | undefined {
-    if (!this.model) return undefined;
-    return tf.tidy(() => this.model?.predict(states)) as tf.Tensor2D;
+    return predict2D(this.model, states);
   }
 
   public  train(xBatch: tf.Tensor | tf.Tensor[], yBatch: tf.Tensor | tf.Tensor[], args?:tf.ModelFitArgs):Promise<tf.History>  {
@@ -111,8 +110,8 @@ export class Model1D implements NeuronalDronModel{
 
 export class Model1D2 implements NeuronalDronModel{
   model: tf.LayersModel | undefined;
-  public inputNumStates= 3;
-  public outputNumActions= 3;
+  public readonly inputNumStates= 3;
+  public readonly outputNumActions= 3;
 
 
   public constructor(){
@@ -121,8 +120,7 @@ export class Model1D2 implements NeuronalDronModel{
 
 
   predict(states: tf.Tensor | tf.Tensor[]):tf.Tensor2D | undefined {
-    if (!this.model) return undefined;
-    return tf.tidy(() => this.model?.predict(states)) as tf.Tensor2D;
+    return predict2D(this.model, states);
   }
 
   public  train(xBatch: tf.Tensor | tf.Tensor[], yBatch: tf.Tensor | tf.Tensor[], args?:tf.ModelFitArgs):Promise<tf.History>  {
@@ -138,7 +136,7 @@ export class Model1D2 implements NeuronalDronModel{
   }
   
   /**
-   * Crea el modelo de red neuronal para manejar 2 entradas continuas y  5 salidas como etiquetas
+   * Crea el modelo con tres entradas y tres acciones.
    */
   private createModel2() {
     if(this.model) return;
@@ -167,8 +165,8 @@ export class Model1D2 implements NeuronalDronModel{
 export class ModelDron2D implements NeuronalDronModel{
   model: tf.LayersModel | undefined;
   /** 2 posiciones, 2 velocidad, 2 fuerzas */
-  public inputNumStates= 6;
-  public outputNumActions= 6; //3 para la fuerza, 3 para el pitch
+  public readonly inputNumStates= 6;
+  public readonly outputNumActions= 6; //3 para la fuerza, 3 para el pitch
 
 
   public constructor(){
@@ -177,8 +175,7 @@ export class ModelDron2D implements NeuronalDronModel{
 
 
   predict(states: tf.Tensor | tf.Tensor[]):tf.Tensor2D | undefined {
-    if (!this.model) return undefined;
-    return tf.tidy(() => this.model?.predict(states)) as tf.Tensor2D;
+    return predict2D(this.model, states);
   }
 
   public  train(xBatch: tf.Tensor | tf.Tensor[], yBatch: tf.Tensor | tf.Tensor[], args?:tf.ModelFitArgs):Promise<tf.History>  {
@@ -194,7 +191,7 @@ export class ModelDron2D implements NeuronalDronModel{
   }
   
   /**
-   * Crea el modelo de red neuronal para manejar 2 entradas continuas y  5 salidas como etiquetas
+   * Crea el modelo con seis entradas y dos grupos de tres acciones.
    */
   private createModel2() {
     if(this.model) return;
@@ -215,4 +212,16 @@ export class ModelDron2D implements NeuronalDronModel{
     network.compile({ optimizer: 'adam', loss: 'meanSquaredError' });
     this.model = network;
   }
+
+}
+
+function predict2D(model: tf.LayersModel | undefined, states: tf.Tensor | tf.Tensor[]): tf.Tensor2D | undefined {
+  if (!model) return undefined;
+  return tf.tidy(() => {
+    const prediction = model.predict(states);
+    if (Array.isArray(prediction) || prediction.rank !== 2) {
+      throw new Error('El modelo debe producir un único tensor de rango 2');
+    }
+    return prediction as tf.Tensor2D;
+  });
 }

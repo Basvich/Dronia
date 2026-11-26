@@ -59,7 +59,7 @@ export default class AdapterDroneTf implements IAdapterDroneTf {
   }
 
   /**
-   * El estado del dron para solo 1D, normalizando sus variables entre [-1,1]
+   * Estado 1D: posición relativa y velocidad limitadas a los rangos del adaptador.
    * @returns Posicion relativa, velocidad
    */
   public getStateTensor(): tf.Tensor2D {
@@ -90,7 +90,7 @@ export default class AdapterDroneTf implements IAdapterDroneTf {
     //console.log(mx);
     let i = 0;
     if (forcedI === undefined) {
-      let m = -1000;
+      let m = Number.NEGATIVE_INFINITY;
       for (let j = 0; j < tensorData.length; j++) {
         if (tensorData[j] > m) {
           i = j;
@@ -175,8 +175,7 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
   }
 
   /**
- * El estado del dron para solo 1D, normalizando sus variables entre [-1,1]
- * @returns Posicion relativa, velocidad
+ * Estado 1D: posición relativa, velocidad y fuerza neta vertical.
  */
   public getStateTensor(): tf.Tensor2D {
     const posY = this.normalizePosY(this.drone.Position.y);
@@ -198,7 +197,7 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
     const tensorData = data.dataSync();   
     let i = 0;
     if (forcedI === undefined) {
-      let m = -1000;
+      let m = Number.NEGATIVE_INFINITY;
       for (let j = 0; j < tensorData.length; j++) {
         if (tensorData[j] > m) {
           i = j;
@@ -244,7 +243,8 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
   /**
    * 
    * @param dataXY array de [Y, velY]
-   * @returns un tensor ajustado según el propio adaptador
+   * @returns Un estado de tres valores por muestra. La gráfica no aporta fuerza,
+   * por lo que se utiliza la fuerza neta actual del dron.
    */
   public getMappedTensor(dataXY: number[][]): tf.Tensor2D {
     //if (dataXY.length !== 2) throw new Error('Tiene que tener un array X y otro Y de identicas dimensiones');
@@ -252,7 +252,7 @@ export class AdapterDroneTf2 implements IAdapterDroneTf {
     const arrXY = dataXY.map((value) => {
       const posY = this.normalizePosY(value[0]);
       const velY = this.normalizeVely(value[1]);
-      return [posY, velY];
+      return [posY, velY, this.drone.NetForce.y];
     });
     return tf.tensor2d(arrXY);
   }
@@ -355,25 +355,10 @@ export class AdapterDrone2D implements IAdapterDrone3D {
 
   
 
-  /**
-   * 
-   * @param dataXY array de [x0, y0, velY, pitch]
-   * @returns un tensor ajustado según el propio adaptador
-   */
-  public getMappedTensor(dataXY: number[][]): tf.Tensor2D {
-    throw new Error('Function not implemented.');
-    //if (dataXY.length !== 2) throw new Error('Tiene que tener un array X y otro Y de identicas dimensiones');
-    //Devuelve un array con vectores[y, vely]
-    const relativePos=new THREE.Vector3();
-    const clampedVel=new THREE.Vector3();
-    const arrXY = dataXY.map((value) => {
-      relativePos.set(value[0],value[1],0);
-      relativePos.sub(this.target3D).clamp(this.minClampPos, this.maxClampPos);
-      
-      clampedVel.set(value[0],value[1],0).clamp(this.minClampVel, this.maxClampVel);
-      return [relativePos.x, relativePos.y];
-    });
-    return tf.tensor2d(arrXY);
+  /** El estado 2D requiere seis valores; no existe aún un mapeo para la gráfica 1D. */
+  // eslint-disable-next-line class-methods-use-this
+  public getMappedTensor(): tf.Tensor2D {
+    throw new Error('El mapeo de estados 2D no está implementado');
   }
 
   public TotalRelativeForce(index: number): number {
