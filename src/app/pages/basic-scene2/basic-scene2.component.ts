@@ -11,6 +11,7 @@ import * as THREE from 'three';
 import { BasicSceneBase } from '../basicSceneBase';
 import { AdapterDroneTf2 } from 'src/app/NetsIA/AdapterDroneTf';
 import { Model1D2 } from 'src/app/NetsIA/ModelIA1D';
+import { RewardMode } from 'src/app/NetsIA/TRewards';
 
 
 /**
@@ -25,6 +26,7 @@ import { Model1D2 } from 'src/app/NetsIA/ModelIA1D';
 })
 export class BasicScene2Component extends BasicSceneBase implements OnInit, AfterViewInit, OnDestroy { 
   private lastTimestap = 0;
+  rewardMode: RewardMode = 'original';
   payload = 0;
   @ViewChild(ThreeRenderComponent) render!: ThreeRenderComponent;
 
@@ -89,7 +91,20 @@ export class BasicScene2Component extends BasicSceneBase implements OnInit, Afte
       if(!this.drone) throw new Error('Undefined drone');
       return new AdapterDroneTf2(this.drone);
     };
-    return new DroneLearnContext(this.drone, ()=>{return new Model1D2();}, createAdapter);
+    const context = new DroneLearnContext(this.drone, ()=>{return new Model1D2();}, createAdapter, this.rewardMode);
+    if (this.targetDrone) context.targetY = this.targetDrone.y;
+    return context;
+  }
+
+  public setRewardMode(mode: RewardMode): void {
+    if (this.bussy || mode === this.rewardMode) return;
+    this.minLapseAutopilot = undefined;
+    this.autoPilotOn = false;
+    this.droneLearnCtx?.Dispose();
+    this.droneLearnCtx = undefined;
+    this.ciclesCount = 0;
+    this.handlePrefixInitials();
+    this.rewardMode = mode;
   }
 
   /**Cuando se activa o desactiva el  */

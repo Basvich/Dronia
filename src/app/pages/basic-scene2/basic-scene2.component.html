@@ -28,6 +28,13 @@
     </div>
     <div class="verticalGroup">
       <h4>tests</h4>      
+      <label for="reward-mode">Recompensa</label>
+      <select id="reward-mode" [ngModel]="rewardMode" (ngModelChange)="setRewardMode($event)" [disabled]="bussy"
+        matTooltip="Cambiar de recompensa descarta la red actual y reinicia el experimento">
+        <option value="original">Original</option>
+        <option value="pd">PD experimental</option>
+        <option value="pid">PID experimental</option>
+      </select>
       <div>
       <mat-slider min="0" max="0.5" step="0.05" discrete disabled="false" matTooltip="Probabilidad exploración. (0.1 => 10%)">
         <input matSliderThumb [(value)]="exploracionFactor">
@@ -40,7 +47,7 @@
       <button mat-flat-button color="secondary" matTooltip="Experimental guardar estado" (click)="saveModel()">Save</button>
     </div>
     <div>
-      <app-drone1-acurrate [droneContext]="droneLearnCtx"
+      <app-drone1-acurrate *ngIf="droneLearnCtx" [droneContext]="droneLearnCtx"
         [InitialPos]="[{posY:1, velY:-2},{posY:1, velY:0},{posY:5, velY:0},{posY:10, velY:0},{posY:10, velY:2}]"
         [ciclesCount]="LearnCicleCount$">
       </app-drone1-acurrate>

@@ -39,4 +39,30 @@ describe('Recompensas', () => {
       drone.Position.y = 6;
     }
   });
+
+  it('la recompensa PD penaliza por separado error y velocidad', () => {
+    const drone = new TDrone3D(0, 9);
+    const reward = new TReward('pd');
+    drone.Velocity.y = -1;
+    expect(reward.InstanReward(drone)).toBe(0);
+    drone.Position.y = 6;
+    drone.Velocity.y = 0;
+    expect(reward.InstanReward(drone)).toBe(10);
+  });
+
+  it('la integral PID se satura, se reduce al invertir el error y se reinicia', () => {
+    const drone = new TDrone3D(0, 4);
+    const reward = new TReward('pid');
+    expect(reward.InstanReward(drone, 0.1)).toBeCloseTo(4.98);
+    for (let i = 0; i < 100; i++) reward.InstanReward(drone, 0.1);
+    expect(reward.InstanReward(drone, 0.1)).toBeCloseTo(4);
+    drone.Position.y = 8;
+    expect(reward.InstanReward(drone, 0.1)).toBeCloseTo(4.02);
+    reward.reset();
+    expect(reward.InstanReward(drone, 0.1)).toBeCloseTo(4.98);
+    reward.targetY = 8;
+    expect(reward.InstanReward(drone, 0.1)).toBe(10);
+    expect(() => reward.InstanReward(drone, 0)).toThrow();
+    expect(() => reward.InstanReward(drone)).toThrow();
+  });
 });

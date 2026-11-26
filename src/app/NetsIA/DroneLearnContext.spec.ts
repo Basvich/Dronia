@@ -121,4 +121,28 @@ describe('DroneLearnContext', () => {
   it('libera los tensores de la prueba de entrenamiento', async () => {
     await context.LearnDummy();
   });
+
+  it('reinicia la integral y conserva el criterio de terminación original', async () => {
+    context.Dispose();
+    context = new DroneLearnContext(drone, () => model, () => new AdapterDroneTf(drone), 'pid');
+    vi.spyOn(drone, 'Simulate').mockImplementation(() => undefined);
+    const instantaneous = vi.spyOn(TReward.prototype, 'InstanReward');
+    const reference = vi.spyOn(TReward.prototype, 'referenceReward').mockReturnValue(-21);
+    vi.spyOn(TReward.prototype, 'IsDone').mockReturnValue(1);
+    vi.mocked(model.train).mockImplementation((xs) => {
+      expect((xs as tf.Tensor).shape).toEqual([1, 2]);
+      return Promise.resolve({} as tf.History);
+    });
+    const options = () => ({
+      explorationF: 0,
+      initialsPos: [{ posY: 5, velY: 0 }][Symbol.iterator]()
+    });
+
+    await context.LearnCicle(options());
+    await context.LearnCicle(options());
+    expect(reference).toHaveBeenCalledTimes(2);
+    expect(instantaneous.mock.results[0].value).toBeCloseTo(7.49);
+    expect(instantaneous.mock.results[1].value).toBeCloseTo(7.49);
+    expect(context.simulateCicle(5, 0).lastReward).toBeCloseTo(8.49);
+  });
 });

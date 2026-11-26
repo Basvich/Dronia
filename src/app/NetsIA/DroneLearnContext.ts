@@ -3,7 +3,7 @@ import { TDrone3D } from '../Objects/Drone3D';
 import { ActionsMemory } from './ActionsMemory';
 import { IAdapterDroneTf } from './AdapterDroneTf';
 import { NeuronalDronModel } from './ModelIA1D';
-import { TReward } from './TRewards';
+import { RewardMode, TReward } from './TRewards';
 import * as tf from '@tensorflow/tfjs';
 import { Random } from '../Objects/utils';
 
@@ -39,7 +39,7 @@ export class DroneLearnContext {
   /** El tiempo prefijado de cada salto de simulación */
   private readonly LapseSegCicle = 0.1;
   private readonly adapter: IAdapterDroneTf;
-  private readonly jury = new TReward();
+  private readonly jury: TReward;
   private modelDummy?: tf.LayersModel;
   private readonly rnModel: NeuronalDronModel;
 
@@ -55,9 +55,10 @@ export class DroneLearnContext {
     this.jury.targetY = v;
   }
 
-  public constructor(private drone: TDrone3D, factoryRN: () => NeuronalDronModel, factoryAdapter: () => IAdapterDroneTf) {
+  public constructor(private drone: TDrone3D, factoryRN: () => NeuronalDronModel, factoryAdapter: () => IAdapterDroneTf, rewardMode: RewardMode = 'original') {
     this.rnModel = factoryRN();
     this.adapter = factoryAdapter();
+    this.jury = new TReward(rewardMode);
   }
 
   public async LearnCicle(opt?: ICicleOptions) {
@@ -68,6 +69,7 @@ export class DroneLearnContext {
     let stepCount = 0;
 
     this.drone.Reset(); //Partimos de la misma posición...
+    this.jury.reset();
     let y0: number | undefined = undefined;
     let vy0: number | undefined = undefined;
     if (opt?.initialsPos) {
@@ -100,12 +102,14 @@ export class DroneLearnContext {
           }
           this.drone.Simulate(this.LapseSegCicle);
 
-          const reward = this.jury.InstanReward(this.drone);
+          const reward = this.jury.InstanReward(this.drone, this.LapseSegCicle);
           if (stepCount % 100 === 0 || forcedI !== undefined || stepCount + 1 === MaxSteps) {
             console.log(`${stepCount} -> pos:[${this.drone.Position.y}] vel:[${this.drone.Velocity.y}] rew:${reward}  force:${this.adapter.TotalRelativeForce(info.indexActionSelected)}  ${forcedI !== undefined ? 'RND' : ''}`);
           }
           stepCount++;
-          isInside = reward >= this.minReward;
+          // Mantiene el criterio de fin original aunque cambie la escala de recompensa.
+          const reference = this.jury.mode === 'original' ? reward : this.jury.referenceReward(this.drone);
+          isInside = reference >= this.minReward;
           am.add({ currentState: droneState, action: prediction, reward, info });
           // La memoria pasa a ser responsable de ambos tensores.
           stored = true;
@@ -194,6 +198,7 @@ export class DroneLearnContext {
    */
   public simulateCicle(posY: number, velY: number): { stepCount: number; lastReward: number; mean: number } {
     this.drone.Reset(); //Partimos de la misma posición...
+    this.jury.reset();
     this.drone.Position.set(0, posY, 0);
     this.drone.Velocity.set(0, velY, 0);
     let isDone = 0;
@@ -204,7 +209,7 @@ export class DroneLearnContext {
     while (stepCount < MaxSteps && !isDone && isInside) {
       this.controlDrone();
       this.drone.Simulate(this.LapseSegCicle);
-      reward = this.jury.InstanReward(this.drone);
+      reward = this.jury.InstanReward(this.drone, this.LapseSegCicle);
       stepCount++;
       isInside = this.IsInBoundLimits(this.drone);
       isDone = this.jury.IsDone(this.drone);

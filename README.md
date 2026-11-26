@@ -32,6 +32,16 @@ El objetivo de la red, es entonces acabar entrenando el campo recompensa de cada
 
 Este caso es una variación del simple, pero en vez de manejar fuerzas deseadas, lo que se maneja es la variación de fuerzas, o sea el control básicamente indica si queremos más o menos fuerza aplicada. Entre las variables de entrada también se incluye la fuerza sentida por el dron (cuando está en reposo, sería de 1 apuntando hacia abajo)
 
+En esta página se puede escoger la recompensa antes de entrenar:
+
+* **Original**: valora la posición proyectada según la velocidad.
+* **PD experimental**: `10 - 2,5·|error de posición| - 2,5·|velocidad|`.
+* **PID experimental**: añade a la PD la penalización `-0,1·|integral del error|`. La integral se acumula con el paso de simulación, se limita a ±10 m·s y se reinicia al empezar cada simulación o cambiar el objetivo.
+
+Estos coeficientes son un punto de partida, no una garantía de mejor aprendizaje. La integral interviene en la recompensa, pero no es una entrada de la red; por tanto, un mismo estado observable puede recibir recompensas distintas según su historial. Cambiar el selector descarta la red actual no guardada, reinicia el contador y la gráfica, y desactiva el piloto automático. No se puede cambiar durante el entrenamiento.
+
+Para conservar el mismo criterio de parada del entrenamiento, el umbral se sigue evaluando con la recompensa original en las tres opciones. La gráfica utiliza la recompensa seleccionada, por lo que sus valores no son directamente comparables entre fórmulas. Conviene comparar también estabilidad, error y fallos con las mismas posiciones iniciales y varios entrenamientos.
+
 👉 Ampliar esto en [Entrenamiento 1D 2ª versión](./wiki/aproximacionPrimeraB.md)
 
 ### Entrenamiento con movimiento en 2D

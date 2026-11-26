@@ -1,8 +1,9 @@
 import * as THREE from "three";
 import { TDrone3D } from "../Objects/Drone3D";
 
+export type RewardMode = 'original' | 'pd' | 'pid';
 
-
+/** Recompensas experimentales para el movimiento vertical del dron. */
 export class TReward{
   private a=0;
   private b=0;
@@ -10,7 +11,15 @@ export class TReward{
   private max_rew=10;
   private radius=6;
   private velocityFactor=3;
-  public targetY=6;
+  private targetYValue = 6;
+  private integralError = 0;
+  private readonly integralLimit = 10;
+
+  public get targetY(): number { return this.targetYValue; }
+  public set targetY(value: number) {
+    if (value !== this.targetYValue) this.reset();
+    this.targetYValue = value;
+  }
 
   /** Premio/penalización por acabar mal */
   public badReward=-20;
@@ -18,7 +27,7 @@ export class TReward{
   /** Por acabar sin conseguir nada */
   public badMiniReward=-5;
 
-  public constructor(){
+  public constructor(public readonly mode: RewardMode = 'original'){
     this.initParams();
   }
   
@@ -27,9 +36,45 @@ export class TReward{
    * Calcula el premio en base a la posicion y velocidad del drone, junto con el target
    * @param drone 
    */
-  public InstanReward(drone:TDrone3D):number{
-     //return this.cuadraticReward(drone);
-     return this.polinomialReward(drone);
+  public InstanReward(drone:TDrone3D, lapseSeconds?: number):number{
+    switch (this.mode) {
+      case 'original':
+        return this.polinomialReward(drone);
+      case 'pd':
+        return this.pdReward(drone);
+      case 'pid':
+        if (lapseSeconds === undefined || !Number.isFinite(lapseSeconds) || lapseSeconds <= 0) {
+          throw new Error('El paso de simulación debe ser positivo y finito');
+        }
+        return this.pidReward(drone, lapseSeconds);
+      default:
+        throw new Error(`Modo de recompensa desconocido: ${this.mode}`);
+    }
+  }
+
+  /** Recompensa original usada como referencia para el fin del entrenamiento. */
+  public referenceReward(drone: TDrone3D): number {
+    return this.polinomialReward(drone);
+  }
+
+  /** Cada simulación comienza sin error acumulado. */
+  public reset(): void {
+    this.integralError = 0;
+  }
+
+  private pdReward(drone: TDrone3D): number {
+    const error = this.targetY - drone.Position.y;
+    // Coeficientes iniciales experimentales: error en metros y velocidad en m/s.
+    return 10 - 2.5 * Math.abs(error) - 2.5 * Math.abs(drone.Velocity.y);
+  }
+
+  private pidReward(drone: TDrone3D, lapseSeconds: number): number {
+    const error = this.targetY - drone.Position.y;
+    // La saturación evita que el historial crezca sin límite durante episodios largos.
+    this.integralError = THREE.MathUtils.clamp(
+      this.integralError + error * lapseSeconds, -this.integralLimit, this.integralLimit
+    );
+    return this.pdReward(drone) - 0.1 * Math.abs(this.integralError);
   }
 
   /**

@@ -51,21 +51,21 @@ export class BasicSceneBase implements IDisposable {
     this.minLapseAutopilot = undefined;
     console.clear();
 
-    if (!this.drone) return;
-    if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();   
-    const opt: ICicleOptions = { 
-      explorationF: this.exploracionFactor,
-      initialsPos: this.initialsPosIterator
-     };
-    for (let i = 0; i < this.numCicles; i++) {
-      console.clear();
-      await this.droneLearnCtx.LearnCicle(opt);      
+    try {
+      if (!this.droneLearnCtx) this.droneLearnCtx = this.getDroneContext();
+      const opt: ICicleOptions = {
+        explorationF: this.exploracionFactor,
+        initialsPos: this.initialsPosIterator
+      };
+      for (let i = 0; i < this.numCicles; i++) {
+        console.clear();
+        await this.droneLearnCtx.LearnCicle(opt);
+      }
+      this.ciclesCount += this.numCicles;
+      this.learnCicleCount.next({count:this.ciclesCount, lost:0});
+    } finally {
+      this.bussy = false;
     }
-    this.ciclesCount += this.numCicles;
-    this.learnCicleCount.next({count:this.ciclesCount, lost:0});
-    this.bussy = false;
-
-    //void this.droneLearnCtx.LearnDummy();
   }
 
   public handlePrefixInitials(){
